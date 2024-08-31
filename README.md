@@ -20,4 +20,21 @@ $ npm run watch
 $ <browser> https://localhost:6969/
 ```
 
-This script starts up http-server at http://localhost:6969/ to serve the content of the current folder and tsc in watch mode to constantly recompile [index.ts](./index.ts). See [watch.js](./watch.js) for more details.
+=======
+This script starts up http-server at http://localhost:6969/ to serve the content of the current folder and the server of the game ([server.mts](./server.mts)). See [serve.js](./serve.js) for more details.
+
+## Rebuilding Artifacts
+
+Dependencies
+- Latest commit of [C3 compiler](https://github.com/c3lang/c3c) (you need to build it from scratch)
+- Node (v20.9.0+)
+
+```console
+$ npm install
+$ npm run build
+```
+
+## References
+
+- Renderer implementation is heavily inspired by https://lodev.org/cgtutor/raycasting.html
+- The Networking is Based on https://github.com/tsoding/multiplayer-game-prototype

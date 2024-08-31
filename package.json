@@ -3,15 +3,24 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "watch": "node watch.js"
+    "build": "npm run build:c3 && vite build",
+    "build:c3": "c3c compile -D PLATFORM_WEB --reloc=none --target wasm32 -O3 -g0 --link-libc=no --no-entry -o renderer -z --export-table  -z --allow-undefined -o src/renderer src/renderer.c3",
+    "watch": "vite",
+    "preview": "vite preview",
+    "serve": "concurrently \"tsx src/server.mts\" \"vite\""
   },
   "author": "Alexey Kutepov <reximkut@gmail.com>",
   "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "typescript": "^5.4.5",
-    "ws": "^8.17.1"
+    "@types/ws": "^8.5.12",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
   }
 }
