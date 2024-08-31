@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run build:c3 && vite build",
+    "build": "npm run build:c3 && npm run build:ci",
+    "build:ci": "vite build",
     "build:c3": "c3c compile -D PLATFORM_WEB --reloc=none --target wasm32 -O3 -g0 --link-libc=no --no-entry -o renderer -z --export-table  -z --allow-undefined -o src/renderer src/renderer.c3",
     "watch": "vite",
     "preview": "vite preview",
