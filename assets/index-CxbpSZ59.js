@@ -675,7 +675,7 @@ const initWasm = async (opts = {}, url) => {
   }
   return result.instance;
 };
-const createRenderer = (opts) => initWasm(opts, "/assets/renderer-CM6HW2lB.wasm?init");
+const createRenderer = (opts) => initWasm(opts, "/raycasting/assets/renderer-CM6HW2lB.wasm?init");
 const EPS = 1e-6;
 const NEAR_CLIPPING_PLANE = 0.1;
 const FAR_CLIPPING_PLANE = 10;
@@ -1425,4 +1425,4 @@ let render_floor_and_ceiling;
     window.requestAnimationFrame(frame);
   });
 })();
-//# sourceMappingURL=index-7QWquRgU.js.map
+//# sourceMappingURL=index-CxbpSZ59.js.map
