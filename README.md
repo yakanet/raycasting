@@ -16,12 +16,12 @@ and browsers, but we are working it.**
 
 ```console
 $ npm install
-$ npm run watch
+$ npm run serve
 $ <browser> https://localhost:6969/
 ```
 
 =======
-This script starts up http-server at http://localhost:6969/ to serve the content of the current folder and the server of the game ([server.mts](./server.mts)). See [serve.js](./serve.js) for more details.
+This script starts up vite server at http://localhost:6969/ to serve the content of the current folder and the server of the game ([server.mts](./server.mts)). 
 
 ## Rebuilding Artifacts
 
