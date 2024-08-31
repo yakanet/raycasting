@@ -25,7 +25,7 @@ jobs:
       run: |
         rm package-lock.json
         npm i
-        npm run build:ci
+        npm run build:ci -- --base=/raycasting
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4
       with:
