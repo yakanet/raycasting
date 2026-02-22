@@ -5,6 +5,7 @@ export class InputHandler {
 	private mouseLocked = false;
 	private mouseRotation = 0;
 	private canvas: HTMLCanvasElement;
+	private activeTeleporters = new Set<Sprite>();
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -66,7 +67,7 @@ export class InputHandler {
 		this._cleanup?.();
 	}
 
-	update(player: Player, map: WorldMap, sprites: Sprite[], config: EngineConfig, onCollect?: (sprite: Sprite) => void): void {
+	update(player: Player, map: WorldMap, sprites: Sprite[], config: EngineConfig, onCollect?: (sprite: Sprite) => void, onTeleport?: (sprite: Sprite) => void): void {
 		const { moveSpeed, rotSpeed } = config;
 
 		// Mouse rotation
@@ -106,6 +107,22 @@ export class InputHandler {
 					onCollect(sprite);
 					sprites.splice(i, 1);
 				}
+			}
+		}
+
+		// Teleporter detection (non-destructive, with cooldown)
+		for (const sprite of sprites) {
+			if (sprite.entityType !== 'teleporter' || !sprite.teleportTarget) continue;
+			const dx = player.pos.x - sprite.pos.x;
+			const dy = player.pos.y - sprite.pos.y;
+			const distSq = dx * dx + dy * dy;
+			if (distSq < 0.25) {
+				if (!this.activeTeleporters.has(sprite)) {
+					this.activeTeleporters.add(sprite);
+					onTeleport?.(sprite);
+				}
+			} else if (distSq > 0.49) {
+				this.activeTeleporters.delete(sprite);
 			}
 		}
 	}

@@ -6,7 +6,9 @@
 		buildTextures,
 		getEntityBehavior
 	} from '$lib/engine';
-	import type { Player, Sprite, WorldMap, EngineConfig, Inventory, TextureDef } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, EngineConfig, TextureDef, TeleportTarget } from '$lib/engine';
+	import { inventoryState, addToInventory } from '$lib/stores/inventory.svelte';
+	import { playTeleportSound } from '$lib/engine/audio';
 	import Minimap from './Minimap.svelte';
 
 	interface Props {
@@ -15,26 +17,32 @@
 		player: Player;
 		config: EngineConfig;
 		textures: TextureDef[];
+		preloadedTextures?: Uint8ClampedArray[];
+		onTeleport?: (target: TeleportTarget) => void;
 	}
 
-	const { map, sprites, player, config, textures }: Props = $props();
+	const { map, sprites, player, config, textures, preloadedTextures, onTeleport }: Props = $props();
+
+	function getPreloaded() { return preloadedTextures; }
+	const initialPreloaded = getPreloaded();
 
 	let canvas: HTMLCanvasElement;
 	let fps = $state(0);
 	let showMinimap = $state(true);
-	let inventory: Inventory = $state({});
-	let loading = $state(true);
+	let loading = $state(!initialPreloaded);
 
 	onMount(() => {
 		let running = true;
 		let input: InputHandler | null = null;
 
 		(async () => {
-			const loadedTextures = await buildTextures(config.textureSize, textures);
+			const loadedTextures = initialPreloaded ?? await buildTextures(config.textureSize, textures);
 			if (!running) return;
 			loading = false;
-			await new Promise((r) => requestAnimationFrame(r));
-			if (!running) return;
+			if (!initialPreloaded) {
+				await new Promise((r) => requestAnimationFrame(r));
+				if (!running) return;
+			}
 
 			const ctx = canvas.getContext('2d')!;
 			const raycaster = new Raycaster(config, loadedTextures);
@@ -62,9 +70,16 @@
 					if (sprite.entityType) {
 						const behavior = getEntityBehavior(sprite.entityType);
 						if (behavior) {
-							inventory[behavior.inventoryKey] = (inventory[behavior.inventoryKey] ?? 0) + 1;
+							if (behavior.inventoryKey) {
+								addToInventory(behavior.inventoryKey);
+							}
 							behavior.playSound();
 						}
+					}
+				}, (sprite) => {
+					if (sprite.teleportTarget) {
+						playTeleportSound();
+						onTeleport?.(sprite.teleportTarget);
 					}
 				});
 				raycaster.render(ctx, player, map, sprites);
@@ -98,11 +113,13 @@
 		<button class="minimap-toggle" onclick={() => (showMinimap = !showMinimap)}>
 			{showMinimap ? 'Hide' : 'Show'} Map
 		</button>
-		<div class="inventory">
-			{#each Object.entries(inventory) as [key, count]}
-				<span>{key}: {count}</span>
-			{/each}
-		</div>
+		{#if Object.keys(inventoryState).length > 0}
+			<div class="inventory">
+				{#each Object.entries(inventoryState) as [key, count]}
+					<span>{key}: {count}</span>
+				{/each}
+			</div>
+		{/if}
 	</div>
 
 	{#if showMinimap}

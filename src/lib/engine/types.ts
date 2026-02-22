@@ -11,6 +11,12 @@ export interface Player {
 
 export type EntityType = string;
 
+export interface TeleportTarget {
+	levelId: string;
+	spawnPos?: Vector2;
+	spawnDir?: Vector2;
+}
+
 export interface Sprite {
 	pos: Vector2;
 	texture: number;
@@ -19,6 +25,7 @@ export interface Sprite {
 	scale: number;
 	collectible?: boolean;
 	entityType?: EntityType;
+	teleportTarget?: TeleportTarget;
 }
 
 export type Inventory = Record<string, number>;
@@ -57,6 +64,34 @@ export interface TextureDef {
 	path: string;
 }
 
+
+export interface GlobalConfig {
+	screenWidth: number;
+	screenHeight: number;
+	textureSize: number;
+	moveSpeed: number;
+	rotSpeed: number;
+}
+
+export interface EnvironmentConfig {
+	floorColor: string;
+	ceilingColor: string;
+	floorTexture: number;
+	ceilingTexture: number;
+}
+
+export interface GameConfig {
+	config: GlobalConfig;
+	textures: TextureDef[];
+}
+
+export interface LevelContent {
+	name: string;
+	map: WorldMap;
+	sprites: Sprite[];
+	player: Player;
+	environment: EnvironmentConfig;
+}
 
 export interface AtlasManifest {
 	atlas: string;

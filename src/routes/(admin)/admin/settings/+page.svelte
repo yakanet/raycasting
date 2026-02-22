@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import type { Player, EngineConfig } from '$lib/engine';
+	import type { Player, GlobalConfig, EnvironmentConfig } from '$lib/engine';
 
 	import PlayerPanel from '$lib/components/editor/PlayerPanel.svelte';
 	import ConfigPanel from '$lib/components/editor/ConfigPanel.svelte';
-	import { saveLevel } from '../level.remote';
+	import EnvironmentPanel from '$lib/components/editor/EnvironmentPanel.svelte';
+	import { saveLevel, saveGameConfig } from '../level.remote';
 
 	const { data } = $props();
 	const initial = untrack(() => structuredClone(data));
 
 	let player: Player = $state(structuredClone(initial.player));
-	let config: EngineConfig = $state(structuredClone(initial.config));
+	let globalConfig: GlobalConfig = $state(structuredClone(initial.globalConfig));
+	let environment: EnvironmentConfig = $state(structuredClone(initial.environment));
 
 	let saving = $state(false);
 	let statusMsg = $state('');
@@ -19,14 +21,21 @@
 		saving = true;
 		statusMsg = '';
 		try {
-			const result = await saveLevel({
-				map: data.map,
-				sprites: data.sprites,
-				player,
-				config,
-				textures: data.textures
-			});
-			statusMsg = result.ok ? 'Saved!' : 'Error saving';
+			const [levelResult, configResult] = await Promise.all([
+				saveLevel({
+					levelId: data.levelId,
+					name: data.levelName,
+					map: data.map,
+					sprites: data.sprites,
+					player,
+					environment
+				}),
+				saveGameConfig({
+					config: globalConfig,
+					textures: data.textures
+				})
+			]);
+			statusMsg = levelResult.ok && configResult.ok ? 'Saved!' : 'Error saving';
 		} catch {
 			statusMsg = 'Error saving';
 		}
@@ -49,7 +58,8 @@
 
 	<div class="panels">
 		<PlayerPanel {player} />
-		<ConfigPanel {config} />
+		<ConfigPanel config={globalConfig} />
+		<EnvironmentPanel {environment} textures={data.textures} />
 	</div>
 </div>
 

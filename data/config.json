@@ -1,0 +1,76 @@
+{
+  "config": {
+    "screenWidth": 960,
+    "screenHeight": 600,
+    "textureSize": 64,
+    "moveSpeed": 0.05,
+    "rotSpeed": 0.03
+  },
+  "textures": [
+    {
+      "id": 0,
+      "name": "Wall: Brick",
+      "path": "/textures/tex_0.png"
+    },
+    {
+      "id": 1,
+      "name": "Wall: Stone",
+      "path": "/textures/tex_1.png"
+    },
+    {
+      "id": 2,
+      "name": "Wall: Blue",
+      "path": "/textures/tex_2.png"
+    },
+    {
+      "id": 3,
+      "name": "Wall: Wood",
+      "path": "/textures/tex_3.png"
+    },
+    {
+      "id": 4,
+      "name": "Wall: Moss",
+      "path": "/textures/tex_4.png"
+    },
+    {
+      "id": 5,
+      "name": "Floor",
+      "path": "/textures/tex_5.png"
+    },
+    {
+      "id": 6,
+      "name": "Ceiling",
+      "path": "/textures/tex_6.png"
+    },
+    {
+      "id": 7,
+      "name": "Sprite: Barrel",
+      "path": "/textures/tex_7.png"
+    },
+    {
+      "id": 8,
+      "name": "Sprite: Pillar",
+      "path": "/textures/tex_8.png"
+    },
+    {
+      "id": 9,
+      "name": "Sprite: Coin",
+      "path": "/textures/tex_9.png"
+    },
+    {
+      "id": 10,
+      "name": "Sprite: Bomb",
+      "path": "/textures/tex_10.png?v=1771727310442"
+    },
+    {
+      "id": 11,
+      "name": "SF",
+      "path": "/textures/tex_11.png?v=1771727113813"
+    },
+    {
+      "id": 12,
+      "name": "Sky",
+      "path": "/textures/tex_12.png?v=1771733117157"
+    }
+  ]
+}

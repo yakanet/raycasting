@@ -2,12 +2,18 @@
 	import { getEntityTypes } from '$lib/engine';
 	import type { Sprite, TextureDef } from '$lib/engine';
 
+	interface LevelListEntry {
+		id: string;
+		name: string;
+	}
+
 	interface Props {
 		sprite: Sprite | null;
 		textures: TextureDef[];
+		levels?: LevelListEntry[];
 	}
 
-	let { sprite, textures }: Props = $props();
+	let { sprite, textures, levels = [] }: Props = $props();
 </script>
 
 {#if sprite}
@@ -68,6 +74,68 @@
 		<label>
 			Scale <input type="number" step="0.1" min="0.1" bind:value={sprite.scale} />
 		</label>
+
+		{#if sprite.entityType === 'teleporter'}
+			<h4>Teleporter Target</h4>
+			<label>
+				Target level
+				<select
+					value={sprite.teleportTarget?.levelId ?? ''}
+					onchange={(e) => {
+						const val = e.currentTarget.value;
+						if (val) {
+							sprite.teleportTarget = {
+								...sprite.teleportTarget,
+								levelId: val
+							};
+						} else {
+							sprite.teleportTarget = undefined;
+						}
+					}}
+				>
+					<option value="">None</option>
+					{#each levels as level}
+						<option value={level.id}>{level.name} ({level.id})</option>
+					{/each}
+				</select>
+			</label>
+			{#if sprite.teleportTarget}
+				<label>
+					Spawn X
+					<input
+						type="number"
+						step="0.1"
+						value={sprite.teleportTarget.spawnPos?.x ?? ''}
+						onchange={(e) => {
+							const val = e.currentTarget.value;
+							if (val !== '' && sprite.teleportTarget) {
+								sprite.teleportTarget.spawnPos = {
+									x: Number(val),
+									y: sprite.teleportTarget.spawnPos?.y ?? 0
+								};
+							}
+						}}
+					/>
+				</label>
+				<label>
+					Spawn Y
+					<input
+						type="number"
+						step="0.1"
+						value={sprite.teleportTarget.spawnPos?.y ?? ''}
+						onchange={(e) => {
+							const val = e.currentTarget.value;
+							if (val !== '' && sprite.teleportTarget) {
+								sprite.teleportTarget.spawnPos = {
+									x: sprite.teleportTarget.spawnPos?.x ?? 0,
+									y: Number(val)
+								};
+							}
+						}}
+					/>
+				</label>
+			{/if}
+		{/if}
 	</div>
 {:else}
 	<div class="panel empty">
@@ -96,6 +164,14 @@
 		margin: 0 0 4px;
 		font-size: 13px;
 		color: #ccc;
+	}
+
+	h4 {
+		margin: 8px 0 2px;
+		font-size: 12px;
+		color: #aaa;
+		border-top: 1px solid #333;
+		padding-top: 6px;
 	}
 
 	label {

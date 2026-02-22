@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { EngineConfig } from '$lib/engine';
+	import type { GlobalConfig } from '$lib/engine';
 
 	interface Props {
-		config: EngineConfig;
+		config: GlobalConfig;
 	}
 
 	let { config }: Props = $props();
@@ -29,24 +29,6 @@
 	<label>
 		Rotation Speed
 		<input type="number" step="0.005" bind:value={config.rotSpeed} />
-	</label>
-	<label>
-		Floor Color
-		<input type="color" bind:value={config.floorColor} />
-		<span class="color-val">{config.floorColor}</span>
-	</label>
-	<label>
-		Ceiling Color
-		<input type="color" bind:value={config.ceilingColor} />
-		<span class="color-val">{config.ceilingColor}</span>
-	</label>
-	<label>
-		Floor Texture Slot
-		<input type="number" step="1" min="0" bind:value={config.floorTexture} />
-	</label>
-	<label>
-		Ceiling Texture Slot
-		<input type="number" step="1" min="0" bind:value={config.ceilingTexture} />
 	</label>
 </div>
 
@@ -85,18 +67,4 @@
 		border-radius: 3px;
 	}
 
-	input[type='color'] {
-		width: 32px;
-		height: 24px;
-		border: 1px solid #555;
-		background: none;
-		padding: 0;
-		cursor: pointer;
-	}
-
-	.color-val {
-		font-family: monospace;
-		font-size: 11px;
-		color: #888;
-	}
 </style>

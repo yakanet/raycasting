@@ -1,4 +1,5 @@
 {
+  "name": "Level 1",
   "map": {
     "width": 20,
     "height": 20,
@@ -454,7 +455,8 @@
       "texture": 7,
       "solid": true,
       "radius": 0.3,
-      "scale": 1
+      "scale": 1,
+      "collectible": false
     },
     {
       "pos": {
@@ -574,6 +576,25 @@
       "scale": 0.8,
       "collectible": true,
       "entityType": "bomb"
+    },
+    {
+      "pos": {
+        "x": 2.5,
+        "y": 8.5
+      },
+      "texture": 7,
+      "solid": false,
+      "radius": 0.3,
+      "scale": 1,
+      "collectible": false,
+      "entityType": "teleporter",
+      "teleportTarget": {
+        "levelId": "level-2",
+        "spawnPos": {
+          "x": 2,
+          "y": 2
+        }
+      }
     }
   ],
   "player": {
@@ -590,77 +611,10 @@
       "y": 0.66
     }
   },
-  "config": {
-    "screenWidth": 960,
-    "screenHeight": 600,
-    "textureSize": 64,
-    "moveSpeed": 0.05,
-    "rotSpeed": 0.03,
+  "environment": {
     "floorColor": "#555555",
     "ceilingColor": "#333366",
-    "floorTexture": 5,
-    "ceilingTexture": 6
-  },
-  "textures": [
-    {
-      "id": 0,
-      "name": "Wall: Brick",
-      "path": "/textures/tex_0.png"
-    },
-    {
-      "id": 1,
-      "name": "Wall: Stone",
-      "path": "/textures/tex_1.png"
-    },
-    {
-      "id": 2,
-      "name": "Wall: Blue",
-      "path": "/textures/tex_2.png"
-    },
-    {
-      "id": 3,
-      "name": "Wall: Wood",
-      "path": "/textures/tex_3.png"
-    },
-    {
-      "id": 4,
-      "name": "Wall: Moss",
-      "path": "/textures/tex_4.png"
-    },
-    {
-      "id": 5,
-      "name": "Floor",
-      "path": "/textures/tex_5.png"
-    },
-    {
-      "id": 6,
-      "name": "Ceiling",
-      "path": "/textures/tex_6.png"
-    },
-    {
-      "id": 7,
-      "name": "Sprite: Barrel",
-      "path": "/textures/tex_7.png"
-    },
-    {
-      "id": 8,
-      "name": "Sprite: Pillar",
-      "path": "/textures/tex_8.png"
-    },
-    {
-      "id": 9,
-      "name": "Sprite: Coin",
-      "path": "/textures/tex_9.png"
-    },
-    {
-      "id": 10,
-      "name": "Sprite: Bomb",
-      "path": "/textures/tex_10.png?v=1771727310442"
-    },
-    {
-      "id": 11,
-      "name": "SF",
-      "path": "/textures/tex_11.png?v=1771727113813"
-    }
-  ]
+    "floorTexture": 6,
+    "ceilingTexture": 7
+  }
 }

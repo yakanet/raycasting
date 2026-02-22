@@ -1,14 +1,21 @@
 import * as v from 'valibot';
 import { command } from '$app/server';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 
-const LEVEL_PATH = resolve('data/level.json');
+const CONFIG_PATH = resolve('data/config.json');
+const LEVELS_DIR = resolve('data/levels');
 const TEXTURES_DIR = resolve('static/textures');
 
 const Vector2Schema = v.object({
 	x: v.number(),
 	y: v.number()
+});
+
+const TeleportTargetSchema = v.object({
+	levelId: v.string(),
+	spawnPos: v.optional(Vector2Schema),
+	spawnDir: v.optional(Vector2Schema)
 });
 
 const SpriteSchema = v.object({
@@ -18,7 +25,8 @@ const SpriteSchema = v.object({
 	radius: v.number(),
 	scale: v.optional(v.number(), 1),
 	collectible: v.optional(v.boolean()),
-	entityType: v.optional(v.string())
+	entityType: v.optional(v.string()),
+	teleportTarget: v.optional(TeleportTargetSchema)
 });
 
 const PlayerSchema = v.object({
@@ -27,12 +35,15 @@ const PlayerSchema = v.object({
 	plane: Vector2Schema
 });
 
-const ConfigSchema = v.object({
+const GlobalConfigSchema = v.object({
 	screenWidth: v.number(),
 	screenHeight: v.number(),
 	textureSize: v.number(),
 	moveSpeed: v.number(),
-	rotSpeed: v.number(),
+	rotSpeed: v.number()
+});
+
+const EnvironmentConfigSchema = v.object({
 	floorColor: v.string(),
 	ceilingColor: v.string(),
 	floorTexture: v.number(),
@@ -52,16 +63,85 @@ const WorldMapSchema = v.object({
 });
 
 const SaveLevelSchema = v.object({
+	levelId: v.string(),
+	name: v.string(),
 	map: WorldMapSchema,
 	sprites: v.array(SpriteSchema),
 	player: PlayerSchema,
-	config: ConfigSchema,
-	textures: v.array(TextureDefSchema)
+	environment: EnvironmentConfigSchema
 });
 
 export const saveLevel = command(SaveLevelSchema, async (data) => {
-	mkdirSync(dirname(LEVEL_PATH), { recursive: true });
-	writeFileSync(LEVEL_PATH, JSON.stringify(data, null, 2), 'utf-8');
+	mkdirSync(LEVELS_DIR, { recursive: true });
+	const levelPath = resolve(LEVELS_DIR, `${data.levelId}.json`);
+	const levelContent = {
+		name: data.name,
+		map: data.map,
+		sprites: data.sprites,
+		player: data.player,
+		environment: data.environment
+	};
+	writeFileSync(levelPath, JSON.stringify(levelContent, null, 2), 'utf-8');
+	return { ok: true };
+});
+
+const SaveGameConfigSchema = v.object({
+	config: GlobalConfigSchema,
+	textures: v.array(TextureDefSchema)
+});
+
+export const saveGameConfig = command(SaveGameConfigSchema, async (data) => {
+	mkdirSync(dirname(CONFIG_PATH), { recursive: true });
+	writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
+	return { ok: true };
+});
+
+const CreateLevelSchema = v.object({
+	levelId: v.string()
+});
+
+export const createLevel = command(CreateLevelSchema, async ({ levelId }) => {
+	mkdirSync(LEVELS_DIR, { recursive: true });
+	const levelPath = resolve(LEVELS_DIR, `${levelId}.json`);
+	if (existsSync(levelPath)) {
+		throw new Error(`Level already exists: ${levelId}`);
+	}
+	const defaultLevel = {
+		name: levelId,
+		map: {
+			width: 20,
+			height: 20,
+			tiles: Array.from({ length: 20 }, (_, y) =>
+				Array.from({ length: 20 }, (_, x) => (x === 0 || x === 19 || y === 0 || y === 19 ? 1 : 0))
+			)
+		},
+		sprites: [],
+		player: {
+			pos: { x: 2, y: 2 },
+			dir: { x: 1, y: 0 },
+			plane: { x: 0, y: 0.66 }
+		},
+		environment: {
+			floorColor: '#555555',
+			ceilingColor: '#333366',
+			floorTexture: 6,
+			ceilingTexture: 7
+		}
+	};
+	writeFileSync(levelPath, JSON.stringify(defaultLevel, null, 2), 'utf-8');
+	return { ok: true };
+});
+
+const DeleteLevelSchema = v.object({
+	levelId: v.string()
+});
+
+export const deleteLevel = command(DeleteLevelSchema, async ({ levelId }) => {
+	const levelPath = resolve(LEVELS_DIR, `${levelId}.json`);
+	if (!existsSync(levelPath)) {
+		throw new Error(`Level not found: ${levelId}`);
+	}
+	unlinkSync(levelPath);
 	return { ok: true };
 });
 

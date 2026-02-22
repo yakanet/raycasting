@@ -1,4 +1,4 @@
-import { playCoinSound, playBombSound } from './audio';
+import { playCoinSound, playBombSound, playTeleportSound } from './audio';
 
 export interface EntityBehavior {
 	inventoryKey: string;
@@ -22,3 +22,4 @@ export function getEntityTypes(): string[] {
 // Register built-in entity types
 registerEntity('coin', { inventoryKey: 'coins', playSound: playCoinSound });
 registerEntity('bomb', { inventoryKey: 'bombs', playSound: playBombSound });
+registerEntity('teleporter', { inventoryKey: '', playSound: playTeleportSound });

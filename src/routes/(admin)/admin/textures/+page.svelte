@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { TextureDef } from '$lib/engine';
-	import { saveLevel, uploadTexture as uploadTextureRemote } from '../level.remote';
+	import { saveGameConfig, uploadTexture as uploadTextureRemote } from '../level.remote';
 
 	const { data } = $props();
 	const initial = untrack(() => structuredClone(data));
@@ -30,11 +30,8 @@
 	}
 
 	async function saveQuiet() {
-		await saveLevel({
-			map: data.map,
-			sprites: data.sprites,
-			player: data.player,
-			config: data.config,
+		await saveGameConfig({
+			config: data.globalConfig,
 			textures
 		});
 	}
@@ -76,11 +73,8 @@
 		saving = true;
 		statusMsg = '';
 		try {
-			const result = await saveLevel({
-				map: data.map,
-				sprites: data.sprites,
-				player: data.player,
-				config: data.config,
+			const result = await saveGameConfig({
+				config: data.globalConfig,
 				textures
 			});
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';

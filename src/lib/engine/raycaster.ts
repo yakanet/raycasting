@@ -222,12 +222,35 @@ export class Raycaster {
 	 * mirrored counterpart. Floor pixels are darkened by 50 % (>> 1) to
 	 * distinguish them from walls.
 	 */
-	private renderFloorCeiling(buf: Uint8ClampedArray, player: Player): void {
-		const { screenWidth, screenHeight, textureSize } = this.config;
-		const floorTex = this.textures[this.config.floorTexture];
-		const ceilTex = this.textures[this.config.ceilingTexture];
+	private static parseColor(hex: string): [number, number, number] {
+		const c = parseInt(hex.replace('#', ''), 16);
+		return [(c >> 16) & 0xff, (c >> 8) & 0xff, c & 0xff];
+	}
 
-		if (!floorTex || !ceilTex) return;
+	private renderFloorCeiling(buf: Uint8ClampedArray, player: Player): void {
+		const { screenWidth, screenHeight, textureSize, floorColor, ceilingColor } = this.config;
+		const floorTex = this.config.floorTexture > 0 ? this.textures[this.config.floorTexture - 1] : null;
+		const ceilTex = this.config.ceilingTexture > 0 ? this.textures[this.config.ceilingTexture - 1] : null;
+
+		// Fill with solid colors first (visible where no texture is applied)
+		const [fr, fg, fb] = Raycaster.parseColor(floorColor);
+		const [cr, cg, cb] = Raycaster.parseColor(ceilingColor);
+		const halfH = Math.floor(screenHeight / 2);
+		for (let y = 0; y < screenHeight; y++) {
+			const isFloor = y > halfH;
+			const r = isFloor ? fr : cr;
+			const g = isFloor ? fg : cg;
+			const b = isFloor ? fb : cb;
+			for (let x = 0; x < screenWidth; x++) {
+				const off = (y * screenWidth + x) * 4;
+				buf[off] = r;
+				buf[off + 1] = g;
+				buf[off + 2] = b;
+				buf[off + 3] = 255;
+			}
+		}
+
+		if (!floorTex && !ceilTex) return;
 
 		for (let y = screenHeight / 2 + 1; y < screenHeight; y++) {
 			// Ray direction at the leftmost and rightmost screen columns
@@ -260,19 +283,23 @@ export class Raycaster {
 				const texIdx = (ty * textureSize + tx) * 4;
 
 				// Floor pixel (darkened by 50 %)
-				const floorOffset = (y * screenWidth + x) * 4;
-				buf[floorOffset] = floorTex[texIdx] >> 1;
-				buf[floorOffset + 1] = floorTex[texIdx + 1] >> 1;
-				buf[floorOffset + 2] = floorTex[texIdx + 2] >> 1;
-				buf[floorOffset + 3] = 255;
+				if (floorTex) {
+					const floorOffset = (y * screenWidth + x) * 4;
+					buf[floorOffset] = floorTex[texIdx] >> 1;
+					buf[floorOffset + 1] = floorTex[texIdx + 1] >> 1;
+					buf[floorOffset + 2] = floorTex[texIdx + 2] >> 1;
+					buf[floorOffset + 3] = 255;
+				}
 
 				// Ceiling pixel (vertically mirrored, full brightness)
-				const ceilY = screenHeight - y - 1;
-				const ceilOffset = (ceilY * screenWidth + x) * 4;
-				buf[ceilOffset] = ceilTex[texIdx];
-				buf[ceilOffset + 1] = ceilTex[texIdx + 1];
-				buf[ceilOffset + 2] = ceilTex[texIdx + 2];
-				buf[ceilOffset + 3] = 255;
+				if (ceilTex) {
+					const ceilY = screenHeight - y - 1;
+					const ceilOffset = (ceilY * screenWidth + x) * 4;
+					buf[ceilOffset] = ceilTex[texIdx];
+					buf[ceilOffset + 1] = ceilTex[texIdx + 1];
+					buf[ceilOffset + 2] = ceilTex[texIdx + 2];
+					buf[ceilOffset + 3] = 255;
+				}
 			}
 		}
 	}
