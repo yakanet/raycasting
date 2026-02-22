@@ -155,6 +155,7 @@
 			{mode}
 			{wallTexture}
 			{spriteTexture}
+			{selectedSpriteIndex}
 			onspriteselect={selectSprite}
 		/>
 	</main>

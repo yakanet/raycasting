@@ -4,7 +4,8 @@ import {
 	TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB,
 	TEX_COUNT
 } from './types';
-import type { TextureImageMap } from './types';
+import type { TextureImageMap, AtlasManifest } from './types';
+import atlasManifest from 'virtual:texture-atlas';
 
 /**
  * Generate procedural textures for walls, floor, ceiling, and sprites.
@@ -328,6 +329,52 @@ export function loadImageAsTexture(url: string, targetSize: number): Promise<Uin
 	});
 }
 
+export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray[]> {
+	const manifest = atlasManifest as AtlasManifest;
+	if (!manifest.atlas || manifest.entries.length === 0) {
+		throw new Error('No atlas available');
+	}
+
+	const textures = new Array<Uint8ClampedArray>(TEX_COUNT);
+	const purple = generatePurpleTexture(size);
+	for (let i = 0; i < TEX_COUNT; i++) {
+		textures[i] = purple;
+	}
+
+	// Load the single atlas image
+	const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+		const el = new Image();
+		el.crossOrigin = 'anonymous';
+		el.onload = () => resolve(el);
+		el.onerror = () => reject(new Error(`Failed to load atlas image: ${manifest.atlas}`));
+		el.src = manifest.atlas;
+	});
+
+	// Draw atlas onto a temporary canvas
+	const canvas = document.createElement('canvas');
+	canvas.width = img.naturalWidth;
+	canvas.height = img.naturalHeight;
+	const ctx = canvas.getContext('2d')!;
+	ctx.drawImage(img, 0, 0);
+
+	const atlasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	const atlasPixels = atlasData.data;
+	const atlasWidth = canvas.width;
+
+	// Extract each texture from the atlas strip
+	for (const entry of manifest.entries) {
+		const tex = new Uint8ClampedArray(size * size * 4);
+		for (let y = 0; y < size; y++) {
+			const srcOffset = (y * atlasWidth + entry.x) * 4;
+			const dstOffset = y * size * 4;
+			tex.set(atlasPixels.subarray(srcOffset, srcOffset + size * 4), dstOffset);
+		}
+		textures[entry.slot] = tex;
+	}
+
+	return textures;
+}
+
 function generatePurpleTexture(size: number): Uint8ClampedArray {
 	const data = new Uint8ClampedArray(size * size * 4);
 	const half = size / 2;
@@ -348,6 +395,16 @@ export async function buildTextures(
 	size: number,
 	imageMap: TextureImageMap = {}
 ): Promise<Uint8ClampedArray[]> {
+	// Try atlas loading first (single HTTP request)
+	try {
+		const atlasTextures = await loadAtlasTextures(size);
+		console.log('[textures] Loaded from atlas');
+		return atlasTextures;
+	} catch (e) {
+		console.warn('[textures] Atlas loading failed, falling back to individual images', e);
+	}
+
+	// Fallback: load individual images
 	const count = TEX_COUNT;
 	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);

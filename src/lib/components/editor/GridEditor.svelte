@@ -9,10 +9,11 @@
 		mode: 'wall' | 'erase' | 'sprite' | 'player';
 		wallTexture: number;
 		spriteTexture: number;
+		selectedSpriteIndex: number;
 		onspriteselect: (index: number) => void;
 	}
 
-	let { map, sprites, player, mode, wallTexture, spriteTexture, onspriteselect }: Props = $props();
+	let { map, sprites, player, mode, wallTexture, spriteTexture, selectedSpriteIndex, onspriteselect }: Props = $props();
 
 	const CELL = 24;
 	let canvas: HTMLCanvasElement;
@@ -82,6 +83,7 @@
 		const _tiles = map.tiles;
 		const _sprites = sprites;
 		const _player = player.pos;
+		const _selectedIdx = selectedSpriteIndex;
 
 		const w = map.width * CELL;
 		const h = map.height * CELL;
@@ -117,10 +119,22 @@
 		}
 
 		// Draw sprites
-		for (const s of _sprites) {
+		for (let i = 0; i < _sprites.length; i++) {
+			const s = _sprites[i];
+			const sx = s.pos.x * CELL;
+			const sy = s.pos.y * CELL;
+
+			if (i === _selectedIdx) {
+				ctx.strokeStyle = '#0af';
+				ctx.lineWidth = 2;
+				ctx.beginPath();
+				ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+				ctx.stroke();
+			}
+
 			ctx.fillStyle = '#ff0';
 			ctx.beginPath();
-			ctx.arc(s.pos.x * CELL, s.pos.y * CELL, 4, 0, Math.PI * 2);
+			ctx.arc(sx, sy, 4, 0, Math.PI * 2);
 			ctx.fill();
 		}
 

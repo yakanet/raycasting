@@ -33,6 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const buffer = Buffer.from(await file.arrayBuffer());
 	writeFileSync(resolve(TEXTURES_DIR, filename), buffer);
 
+	// The Vite file watcher detects this write and regenerates the atlas automatically
 	const url = `/textures/${filename}?v=${Date.now()}`;
 	return json({ ok: true, url });
 };

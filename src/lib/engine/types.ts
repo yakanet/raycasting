@@ -91,6 +91,18 @@ export const DEFAULT_TEXTURE_IMAGES: TextureImageMap = {
 	[TEX_BOMB]: '/textures/bomb.png'
 };
 
+export interface AtlasManifest {
+	atlas: string;
+	textureSize: number;
+	entries: AtlasEntry[];
+}
+
+export interface AtlasEntry {
+	slot: number;
+	name: string;
+	x: number;
+}
+
 export const DEFAULT_CONFIG: EngineConfig = {
 	screenWidth: 960,
 	screenHeight: 600,
