@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { TextureDef } from '$lib/engine';
+	import atlasManifest from 'virtual:texture-atlas';
+	import TextureThumb from './TextureThumb.svelte';
 
 	interface Option {
 		value: number;
 		label: string;
-		img: string;
+		slot: number;
 	}
 
 	interface Props {
@@ -23,14 +25,16 @@
 	const _offset = getOffset();
 	const noneValue = _offset - 1;
 
+	let atlasSlots = $derived(new Set(atlasManifest.entries.map((e) => e.slot)));
+
 	let options = $derived(
 		textures
-			.filter((t) => t.path)
+			.filter((t) => atlasSlots.has(t.id))
 			.sort((a, b) => a.id - b.id)
 			.map((t): Option => ({
 				value: t.id + _offset,
 				label: t.name,
-				img: t.path
+				slot: t.id
 			}))
 	);
 </script>
@@ -54,7 +58,7 @@
 	{/if}
 	{#each options as opt}
 		<option value={String(opt.value)}>
-			<img class="tex-thumb" src={opt.img} alt="" />
+			<TextureThumb slot={opt.slot} size={24} />
 			<span class="tex-label">{opt.label}</span>
 		</option>
 	{/each}
@@ -129,16 +133,6 @@
 		display: none;
 	}
 
-	.tex-thumb {
-		width: 24px;
-		height: 24px;
-		image-rendering: pixelated;
-		border-radius: 2px;
-		flex-shrink: 0;
-		border: 1px solid #444;
-		display: block;
-	}
-
 	.tex-none {
 		width: 24px;
 		height: 24px;
@@ -164,8 +158,12 @@
 		gap: 6px;
 	}
 
-	.tex-select selectedcontent .tex-thumb,
 	.tex-select selectedcontent .tex-none {
+		width: 20px;
+		height: 20px;
+	}
+
+	.tex-select selectedcontent :global(.thumb) {
 		width: 20px;
 		height: 20px;
 	}

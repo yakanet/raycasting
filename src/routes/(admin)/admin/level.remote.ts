@@ -6,7 +6,7 @@ import { createDefaultLevel } from '$lib/server/loadLevel';
 
 const CONFIG_PATH = resolve('data/config.json');
 const LEVELS_DIR = resolve('data/levels');
-const TEXTURES_DIR = resolve('static/textures');
+const TEXTURES_DIR = resolve('data/textures');
 
 const Vector2Schema = v.object({
 	x: v.number(),
@@ -53,8 +53,7 @@ const EnvironmentConfigSchema = v.object({
 
 const TextureDefSchema = v.object({
 	id: v.number(),
-	name: v.string(),
-	path: v.string()
+	name: v.string()
 });
 
 const WorldMapSchema = v.object({
@@ -146,6 +145,5 @@ export const uploadTexture = command(UploadTextureSchema, async ({ slot, filenam
 	mkdirSync(TEXTURES_DIR, { recursive: true });
 	writeFileSync(resolve(TEXTURES_DIR, outFilename), Buffer.from(data));
 
-	const url = `/textures/${outFilename}?v=${Date.now()}`;
-	return { ok: true, url };
+	return { ok: true };
 });

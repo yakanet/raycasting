@@ -6,7 +6,7 @@
 		buildTextures,
 		getEntityBehavior
 	} from '$lib/engine';
-	import type { Player, Sprite, WorldMap, EngineConfig, TextureDef, TeleportTarget } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, EngineConfig, TeleportTarget } from '$lib/engine';
 	import { inventoryState, addToInventory } from '$lib/stores/inventory.svelte';
 	import { playTeleportSound } from '$lib/engine/audio';
 	import Minimap from './Minimap.svelte';
@@ -16,12 +16,11 @@
 		sprites: Sprite[];
 		player: Player;
 		config: EngineConfig;
-		textures: TextureDef[];
 		preloadedTextures?: Uint8ClampedArray[];
 		onTeleport?: (target: TeleportTarget) => void;
 	}
 
-	const { map, sprites, player, config, textures, preloadedTextures, onTeleport }: Props = $props();
+	const { map, sprites, player, config, preloadedTextures, onTeleport }: Props = $props();
 
 	function getPreloaded() { return preloadedTextures; }
 	const initialPreloaded = getPreloaded();
@@ -36,7 +35,7 @@
 		let input: InputHandler | null = null;
 
 		(async () => {
-			const loadedTextures = initialPreloaded ?? await buildTextures(config.textureSize, textures);
+			const loadedTextures = initialPreloaded ?? await buildTextures(config.textureSize);
 			if (!running) return;
 			loading = false;
 			if (!initialPreloaded) {

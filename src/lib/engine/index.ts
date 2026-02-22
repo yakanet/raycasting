@@ -1,6 +1,6 @@
 export { Raycaster } from './raycaster';
 export { InputHandler } from './input';
-export { buildTextures, loadImageAsTexture, loadAtlasTextures, generateUnknownTexture } from './textures';
+export { buildTextures, loadAtlasTextures, generateUnknownTexture } from './textures';
 export { placeWall, removeWall } from './map';
 export { registerEntity, getEntityBehavior, getEntityTypes } from './entities';
 export type { EntityBehavior } from './entities';

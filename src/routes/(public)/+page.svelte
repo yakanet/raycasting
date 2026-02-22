@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import RaycastCanvas from '$lib/components/RaycastCanvas.svelte';
 	import { buildTextures, DEFAULT_LEVEL_ID } from '$lib/engine';
-	import type { TeleportTarget, Player, Sprite, WorldMap, EngineConfig, TextureDef } from '$lib/engine';
+	import type { TeleportTarget, Player, Sprite, WorldMap, EngineConfig } from '$lib/engine';
 	import { resetInventory } from '$lib/stores/inventory.svelte';
 	import { fetchLevel } from './level.remote';
 
@@ -15,11 +15,10 @@
 	let sprites: Sprite[] = $state(initial.sprites);
 	let player: Player = $state(initial.player);
 	let config: EngineConfig = $state(initial.config);
-	let textures: TextureDef[] = $state(initial.textures);
 	let cachedTextures: Uint8ClampedArray[] | undefined = $state(undefined);
 
 	onMount(() => {
-		buildTextures(config.textureSize, textures).then((built) => {
+		buildTextures(config.textureSize).then((built) => {
 			cachedTextures = built;
 		});
 	});
@@ -33,7 +32,6 @@
 			? { ...level.player, pos: target.spawnPos, ...(target.spawnDir ? { dir: target.spawnDir } : {}) }
 			: level.player;
 		config = level.config;
-		textures = level.textures;
 		currentLevelId = target.levelId;
 	}
 </script>
@@ -49,7 +47,6 @@
 			{sprites}
 			{player}
 			{config}
-			{textures}
 			preloadedTextures={cachedTextures}
 			{onTeleport}
 		/>

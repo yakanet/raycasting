@@ -6,7 +6,7 @@ import type { Plugin } from 'vite';
 import type { AtlasEntry, TextureDef, GameConfig } from '../engine/types';
 
 const CONFIG_PATH_REL = 'data/config.json';
-const TEXTURES_DIR_REL = 'static/textures';
+const TEXTURES_DIR_REL = 'data/textures';
 const VIRTUAL_MODULE_ID = 'virtual:texture-atlas';
 const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_MODULE_ID;
 const ATLAS_SERVE_PATH = '/@texture-atlas.png';

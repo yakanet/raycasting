@@ -43,9 +43,9 @@ Remote functions (replacing former REST API routes):
 Vite plugin that composites all PNG textures (from `data/config.json` registry) into a single horizontal strip image, served via virtual module:
 
 - **`virtual:texture-atlas`** — Virtual JS module exporting manifest `{ atlas: URL, textureSize, entries }`.
-- **Dev mode:** Atlas PNG served in-memory via middleware at `/@texture-atlas.png`. File watcher on `static/textures/` and `data/config.json` triggers rebuild + HMR full-reload.
+- **Dev mode:** Atlas PNG served in-memory via middleware at `/@texture-atlas.png`. File watcher on `data/textures/` and `data/config.json` triggers rebuild + HMR full-reload.
 - **Build mode:** Atlas emitted as hashed Rollup asset via `this.emitFile`.
-- **Slot resolution:** Texture files named `tex_<id>.*` in `static/textures/`.
+- **Slot resolution:** Texture files named `tex_<id>.*` in `data/textures/`.
 - **No files written to disk** — atlas exists only in memory / build output.
 
 Type declaration for the virtual module lives in `src/virtual-modules.d.ts`.
@@ -58,6 +58,7 @@ Type declaration for the virtual module lives in `src/virtual-modules.d.ts`.
 - **`PlayerPanel.svelte`** — Edit spawn position and rotation angle (degree↔radian conversion, auto-computes camera plane).
 - **`ConfigPanel.svelte`** — Engine settings (screen size, texture size, speeds).
 - **`EnvironmentPanel.svelte`** — Floor/ceiling colors and textures.
+- **`TextureThumb.svelte`** — Displays a single texture slot from the atlas via CSS background cropping.
 - **`TextureSelect.svelte`** — Reusable image-picker `<select>` component (uses experimental `appearance: base-select`).
 
 ### Game Components (`src/lib/components/`)
@@ -69,7 +70,7 @@ Type declaration for the virtual module lives in `src/virtual-modules.d.ts`.
 
 - **`data/config.json`** — Game config: global settings (`screenWidth`, `screenHeight`, `textureSize`, `moveSpeed`, `rotSpeed`) and texture registry (`TextureDef[]` with id/name/path).
 - **`data/levels/<id>.json`** — Per-level data: name, map (tiles), sprites, player spawn, environment config. Default level: `start.json`.
-- **`static/textures/`** — PNG texture files (defaults + custom uploads `tex_<id>.<ext>`).
+- **`data/textures/`** — PNG texture files (defaults + custom uploads `tex_<id>.<ext>`). Not in `static/` — served via Vite plugin middleware in dev, atlas only in build.
 - **`src/lib/server/loadLevel.ts`** — `loadLevel()`, `loadGameConfig()`, `listLevels()`, `createDefaultLevel()`, `mergeEngineConfig()`.
 
 ## Conventions

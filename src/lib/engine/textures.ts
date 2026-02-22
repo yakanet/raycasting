@@ -1,22 +1,5 @@
-import type { TextureDef, AtlasManifest } from './types';
+import type { AtlasManifest } from './types';
 import atlasManifest from 'virtual:texture-atlas';
-
-export function loadImageAsTexture(url: string, targetSize: number): Promise<Uint8ClampedArray> {
-	return new Promise((resolve, reject) => {
-		const img = new Image();
-		img.crossOrigin = 'anonymous';
-		img.onload = () => {
-			const canvas = document.createElement('canvas');
-			canvas.width = targetSize;
-			canvas.height = targetSize;
-			const ctx = canvas.getContext('2d')!;
-			ctx.drawImage(img, 0, 0, targetSize, targetSize);
-			resolve(ctx.getImageData(0, 0, targetSize, targetSize).data);
-		};
-		img.onerror = () => reject(new Error(`Failed to load texture image: ${url}`));
-		img.src = url;
-	});
-}
 
 export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray[]> {
 	const manifest = atlasManifest as AtlasManifest;
@@ -82,41 +65,6 @@ export function generateUnknownTexture(size: number): Uint8ClampedArray {
 	return data;
 }
 
-export async function buildTextures(
-	size: number,
-	textureDefs: TextureDef[] = []
-): Promise<Uint8ClampedArray[]> {
-	// Try atlas loading first (single HTTP request)
-	try {
-		const atlasTextures = await loadAtlasTextures(size);
-		console.log('[textures] Loaded from atlas');
-		return atlasTextures;
-	} catch (e) {
-		console.warn('[textures] Atlas loading failed, falling back to individual images', e);
-	}
-
-	// Fallback: load individual images
-	const entries = textureDefs.filter((t) => t.path);
-
-	const maxSlot = entries.reduce((max, t) => Math.max(max, t.id), 0);
-	const count = maxSlot + 1;
-	const textures = new Array<Uint8ClampedArray>(count);
-	const unknown = generateUnknownTexture(size);
-
-	// Pre-fill all slots with unknown fallback
-	for (let i = 0; i < count; i++) {
-		textures[i] = unknown;
-	}
-
-	await Promise.all(
-		entries.map(async (tex) => {
-			try {
-				textures[tex.id] = await loadImageAsTexture(tex.path, size);
-			} catch (e) {
-				console.warn(`Texture slot ${tex.id}: falling back to purple`, e);
-			}
-		})
-	);
-
-	return textures;
+export async function buildTextures(size: number): Promise<Uint8ClampedArray[]> {
+	return loadAtlasTextures(size);
 }

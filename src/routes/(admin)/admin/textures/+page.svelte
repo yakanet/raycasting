@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { TextureDef } from '$lib/engine';
+	import atlasManifest from 'virtual:texture-atlas';
 	import { saveGameConfig, uploadTexture as uploadTextureRemote } from '../level.remote';
+	import TextureThumb from '$lib/components/editor/TextureThumb.svelte';
 
 	const { data } = $props();
 	const initial = untrack(() => structuredClone(data));
@@ -12,6 +14,12 @@
 	let statusMsg = $state('');
 	let newTextureName = $state('');
 
+	let atlasSlots = $derived(new Set(atlasManifest.entries.map((e) => e.slot)));
+
+	function hasImage(id: number): boolean {
+		return atlasSlots.has(id);
+	}
+
 	function getNextId(): number {
 		if (textures.length === 0) return 0;
 		return Math.max(...textures.map((t) => t.id)) + 1;
@@ -20,7 +28,7 @@
 	function addTexture() {
 		const name = newTextureName.trim();
 		if (!name) return;
-		textures.push({ id: getNextId(), name, path: '' });
+		textures.push({ id: getNextId(), name });
 		newTextureName = '';
 	}
 
@@ -42,22 +50,11 @@
 			await saveQuiet();
 
 			const bytes = new Uint8Array(await file.arrayBuffer());
-			const result = await uploadTextureRemote({ slot: id, filename: file.name, data: bytes });
-
-			if (result.ok) {
-				const tex = textures.find((t) => t.id === id);
-				if (tex) tex.path = result.url;
-				await saveQuiet();
-			}
+			await uploadTextureRemote({ slot: id, filename: file.name, data: bytes });
 		} catch (e) {
 			console.error('Upload failed', e);
 		}
 		uploading = null;
-	}
-
-	function clearSlot(id: number) {
-		const tex = textures.find((t) => t.id === id);
-		if (tex) tex.path = '';
 	}
 
 	function handleFileInput(id: number, event: Event) {
@@ -119,12 +116,8 @@
 				</div>
 
 				<div class="preview-area">
-					{#if tex.path}
-						<img
-							class="preview"
-							src={tex.path}
-							alt={tex.name}
-						/>
+					{#if hasImage(tex.id)}
+						<TextureThumb slot={tex.id} size={64} />
 					{:else}
 						<div class="preview placeholder">?</div>
 					{/if}
@@ -141,9 +134,6 @@
 						/>
 					</label>
 					<button class="btn-delete" onclick={() => deleteTexture(tex.id)}>Delete</button>
-					{#if tex.path}
-						<button class="btn-clear" onclick={() => clearSlot(tex.id)}>Clear</button>
-					{/if}
 				</div>
 			</div>
 		{/each}
@@ -290,10 +280,10 @@
 	.card-actions {
 		display: flex;
 		gap: 6px;
+		justify-content: space-evenly;
 	}
 
 	.btn-upload {
-		flex: 1;
 		background: #333;
 		border: 1px solid #555;
 		color: #aaa;
@@ -312,20 +302,6 @@
 	.btn-upload.disabled {
 		opacity: 0.5;
 		pointer-events: none;
-	}
-
-	.btn-clear {
-		background: #4a2a2a;
-		border: 1px solid #6a4a4a;
-		color: #ccc;
-		padding: 5px 10px;
-		font-size: 12px;
-		cursor: pointer;
-		border-radius: 4px;
-	}
-
-	.btn-clear:hover {
-		background: #5a3a3a;
 	}
 
 	.btn-delete {

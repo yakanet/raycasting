@@ -63,7 +63,6 @@ export interface EngineConfig {
 export interface TextureDef {
 	id: number;
 	name: string;
-	path: string;
 }
 
 

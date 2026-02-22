@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getEntityTypes } from '$lib/engine';
 	import type { Sprite, TextureDef } from '$lib/engine';
+	import TextureThumb from './TextureThumb.svelte';
 
 	interface LevelListEntry {
 		id: string;
@@ -37,9 +38,7 @@
 				</button>
 				{#each textures as tex}
 					<option value={String(tex.id)}>
-						{#if tex.path}
-							<img class="tex-thumb" src={tex.path} alt="" />
-						{/if}
+						<TextureThumb slot={tex.id} size={20} />
 						<span class="tex-label">{tex.name}</span>
 					</option>
 				{/each}
@@ -263,16 +262,6 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-	}
-
-	.tex-thumb {
-		width: 20px;
-		height: 20px;
-		image-rendering: pixelated;
-		border-radius: 2px;
-		flex-shrink: 0;
-		border: 1px solid #444;
-		display: block;
 	}
 
 	.tex-label {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Player, Sprite, WorldMap, TextureDef } from '$lib/engine';
+	import type { Player, Sprite, WorldMap } from '$lib/engine';
 
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
 	import SpriteList from '$lib/components/editor/SpriteList.svelte';
@@ -35,7 +35,7 @@
 
 	let textures = $derived(data.textures);
 
-	const firstTex = untrack(() => data.textures).find((t: TextureDef) => t.path);
+	const firstTex = untrack(() => data.textures)[0];
 	let mode: 'wall' | 'erase' | 'sprite' | 'player' = $state('wall');
 	let wallTexture = $state(firstTex ? firstTex.id + 1 : 1);
 	let spriteTexture = $state(firstTex?.id ?? 0);
