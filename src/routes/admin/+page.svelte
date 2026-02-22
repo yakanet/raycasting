@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { createDefaultMap, createDefaultSprites, DEFAULT_CONFIG, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB } from '$lib/engine';
 	import type { Player, Sprite, WorldMap, EngineConfig } from '$lib/engine';
-	import type { TextureImageMap } from '$lib/engine';
+
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
 	import SpriteList from '$lib/components/editor/SpriteList.svelte';
 	import SpritePanel from '$lib/components/editor/SpritePanel.svelte';
 	import PlayerPanel from '$lib/components/editor/PlayerPanel.svelte';
 	import ConfigPanel from '$lib/components/editor/ConfigPanel.svelte';
-	import TexturePanel from '$lib/components/editor/TexturePanel.svelte';
+
 
 	const { data } = $props();
 
@@ -15,7 +15,6 @@
 	let sprites: Sprite[] = $state(structuredClone(data.sprites));
 	let player: Player = $state(structuredClone(data.player));
 	let config: EngineConfig = $state(structuredClone(data.config));
-	let textureImages: TextureImageMap = $state(structuredClone(data.textureImages ?? {}));
 
 	let mode: 'wall' | 'erase' | 'sprite' | 'player' = $state('wall');
 	let wallTexture = $state(1);
@@ -63,7 +62,7 @@
 			const res = await fetch('/api/level', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ map, sprites, player, config, textureImages })
+				body: JSON.stringify({ map, sprites, player, config, textureImages: data.textureImages })
 			});
 			const result = await res.json();
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
@@ -73,10 +72,6 @@
 		saving = false;
 	}
 </script>
-
-<svelte:head>
-	<title>Level Editor</title>
-</svelte:head>
 
 <div class="admin-layout">
 	<aside class="sidebar">
@@ -132,14 +127,11 @@
 
 		<ConfigPanel {config} />
 
-		<TexturePanel {textureImages} />
-
 		<div class="actions">
 			<button class="btn-save" onclick={save} disabled={saving}>
 				{saving ? 'Saving...' : 'Save'}
 			</button>
 			<button class="btn-defaults" onclick={loadDefaults}>Load Defaults</button>
-			<a href="/" class="btn-play" data-sveltekit-preload-data="off">Play</a>
 		</div>
 
 		{#if statusMsg}
@@ -162,16 +154,9 @@
 </div>
 
 <style>
-	:global(body) {
-		margin: 0;
-		background: #111;
-		color: #ddd;
-		font-family: system-ui, -apple-system, sans-serif;
-	}
-
 	.admin-layout {
 		display: flex;
-		min-height: 100vh;
+		height: 100%;
 	}
 
 	.sidebar {
@@ -183,7 +168,6 @@
 		flex-direction: column;
 		gap: 12px;
 		overflow-y: auto;
-		max-height: 100vh;
 		box-sizing: border-box;
 	}
 
@@ -263,23 +247,6 @@
 
 	.btn-defaults:hover {
 		background: #666;
-	}
-
-	.btn-play {
-		background: #2a4a6a;
-		border: 1px solid #5a8aba;
-		color: #fff;
-		padding: 6px 16px;
-		font-size: 13px;
-		cursor: pointer;
-		border-radius: 4px;
-		text-decoration: none;
-		display: inline-flex;
-		align-items: center;
-	}
-
-	.btn-play:hover {
-		background: #3a5a7a;
 	}
 
 	.status {
