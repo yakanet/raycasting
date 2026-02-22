@@ -24,19 +24,11 @@
 </div>
 
 <style>
-	:global(html, body) {
-		margin: 0;
-		height: 100%;
-		overflow: hidden;
-		background: #111;
-		color: #ddd;
-		font-family: system-ui, -apple-system, sans-serif;
-	}
-
 	.admin-shell {
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
+		overflow: hidden;
 	}
 
 	.admin-nav {
