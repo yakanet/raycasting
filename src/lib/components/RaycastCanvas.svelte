@@ -55,10 +55,10 @@
 			function gameLoop(now: number): void {
 				if (!running) return;
 
-				const dt = now - lastTime;
+				const dtMs = now - lastTime;
 				lastTime = now;
 				frameCount++;
-				fpsTimer += dt;
+				fpsTimer += dtMs;
 
 				if (fpsTimer >= 1000) {
 					fps = frameCount;
@@ -66,7 +66,9 @@
 					fpsTimer = 0;
 				}
 
-				input!.update(player, map, sprites, config, (sprite) => {
+				const dt = Math.min(dtMs / 1000, 0.1);
+
+				input!.update(player, map, sprites, config, dt, (sprite) => {
 					if (sprite.entityType) {
 						const behavior = getEntityBehavior(sprite.entityType);
 						if (behavior) {

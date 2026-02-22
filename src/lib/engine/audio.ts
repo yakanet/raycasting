@@ -5,6 +5,7 @@ function getContext(): AudioContext {
 	return ctx;
 }
 
+
 export function playCoinSound(): void {
 	const ac = getContext();
 	const osc = ac.createOscillator();

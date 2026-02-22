@@ -24,8 +24,8 @@ export function loadGameConfig(): GameConfig {
 				screenWidth: 640,
 				screenHeight: 480,
 				textureSize: 64,
-				moveSpeed: 0.05,
-				rotSpeed: 0.03
+				moveSpeed: 3.0,
+				rotSpeed: 1.8
 			},
 			textures: []
 		};

@@ -8,36 +8,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `pnpm run build` — Production build
 - `pnpm run preview` — Preview production build
 - `pnpm run check` — Type-check with svelte-check (strict TypeScript)
-- `pnpm run generate-textures` — Regenerate default PNG textures from procedural generators
 
 ## Architecture
 
-SvelteKit app implementing a Wolfenstein 3D-style raycasting engine rendered on Canvas 2D (no WebGL), with a built-in level editor.
+SvelteKit app implementing a Wolfenstein 3D-style raycasting engine rendered on Canvas 2D (no WebGL), with a built-in level editor. Uses SvelteKit experimental **remote functions** (`command()` from `$app/server`) instead of REST API routes.
 
 ### Routes
 
-- `/` — Play page. Loads level data server-side via `loadLevel()`, renders `RaycastCanvas`.
-- `/admin` — Level editor. Full editing UI: map tiles, sprite placement, player spawn, engine config, texture uploads.
-- `/api/level` — GET/POST for saving/loading `data/level.json`.
-- `/api/textures` — POST for uploading custom texture images to `static/textures/`.
+- `/` — Play page. Loads level data server-side via `loadLevel()`, renders `RaycastCanvas`. Supports level teleportation.
+- `/admin` — Level editor. Map tiles, sprite placement, player spawn, environment config. Supports multi-level management (create/delete/switch).
+- `/admin/textures` — Texture management. Per-slot upload/preview/delete with live atlas rebuild.
+- `/admin/settings` — Game settings. Global engine config (screen size, speeds) and player/environment config.
+
+Remote functions (replacing former REST API routes):
+- `src/routes/(public)/level.remote.ts` — `fetchLevel` (prerendered remote function) for loading level data client-side (teleportation). All level inputs are baked at build time.
+- `src/routes/(admin)/admin/level.remote.ts` — `saveLevel`, `createLevel`, `deleteLevel`, `uploadTexture`, `saveGameConfig`.
 
 ### Engine (`src/lib/engine/`)
 
 - **`raycaster.ts`** — Core renderer. DDA algorithm casts one ray per screen column for walls, then renders textured floor/ceiling via horizontal raycasting, and finally sprites sorted back-to-front (painter's algorithm) with z-buffer culling. All rendering writes to a single `ImageData` buffer per frame.
-- **`input.ts`** — Keyboard (WASD/arrows) and mouse (pointer lock). Collision detection: wall tiles (margin-based AABB in 3x3 grid) and solid sprites (circle-circle). Movement splits X/Y axes for wall sliding. Collectible pickups auto-detected at distance <0.25.
-- **`textures.ts`** — Procedural texture generation (11 textures: 5 walls, floor, ceiling, 4 sprites). `buildTextures()` tries atlas first (single HTTP request), falls back to individual images, then purple checkerboard.
-- **`map.ts`** — Default 20x20 tile map + sprite placement. `placeWall()` / `removeWall()` helpers.
-- **`types.ts`** — Shared types and 11 texture slot constants (`TEX_WALL_BRICK`=0 through `TEX_BOMB`=10). `DEFAULT_TEXTURE_IMAGES` maps slots to `/textures/*.png` URLs.
-- **`audio.ts`** — Web Audio API sound effects for coin pickup and bomb pickup.
+- **`input.ts`** — Keyboard (WASD/arrows) and mouse (pointer lock). Collision detection: wall tiles (margin-based AABB in 3x3 grid) and solid sprites (circle-circle). Movement splits X/Y axes for wall sliding. Collectible pickups and teleporter detection with cooldown hysteresis.
+- **`textures.ts`** — Texture loading. `buildTextures()` tries atlas first (single HTTP request), falls back to individual images from `TextureDef[]`, then purple checkerboard fallback.
+- **`map.ts`** — `placeWall()` / `removeWall()` helpers for tile manipulation.
+- **`types.ts`** — Shared types/interfaces. Texture slots are dynamic (defined in `data/config.json`, not hardcoded constants).
+- **`audio.ts`** — Web Audio API sound effects (coin, bomb, teleport).
+- **`entities.ts`** — Entity behavior registry. Built-in types: `coin`, `bomb`, `teleporter`. Each has an `inventoryKey` and `playSound` callback.
+
+### Stores (`src/lib/stores/`)
+
+- **`inventory.svelte.ts`** — Module-level `$state` inventory store with `addToInventory()` and `resetInventory()`.
 
 ### Texture Atlas (`src/lib/vite/texture-atlas-plugin.ts`)
 
-Vite plugin that composites all 11 PNG textures into a single horizontal strip image, served via virtual module:
+Vite plugin that composites all PNG textures (from `data/config.json` registry) into a single horizontal strip image, served via virtual module:
 
 - **`virtual:texture-atlas`** — Virtual JS module exporting manifest `{ atlas: URL, textureSize, entries }`.
-- **Dev mode:** Atlas PNG served in-memory via middleware at `/@texture-atlas.png`. File watcher on `static/textures/` triggers rebuild + HMR full-reload.
+- **Dev mode:** Atlas PNG served in-memory via middleware at `/@texture-atlas.png`. File watcher on `static/textures/` and `data/config.json` triggers rebuild + HMR full-reload.
 - **Build mode:** Atlas emitted as hashed Rollup asset via `this.emitFile`.
-- **Slot resolution:** Custom `tex_<slot>.*` overrides default file per slot.
+- **Slot resolution:** Texture files named `tex_<id>.*` in `static/textures/`.
 - **No files written to disk** — atlas exists only in memory / build output.
 
 Type declaration for the virtual module lives in `src/virtual-modules.d.ts`.
@@ -46,23 +54,43 @@ Type declaration for the virtual module lives in `src/virtual-modules.d.ts`.
 
 - **`GridEditor.svelte`** — 24px-cell canvas with pointer painting (walls/erase) and click-to-place (sprites/player). Highlights selected sprite.
 - **`SpriteList.svelte`** — Scrollable sprite list with select/delete.
-- **`SpritePanel.svelte`** — Edit sprite properties (position, texture, solid, collectible, radius, scale).
+- **`SpritePanel.svelte`** — Edit sprite properties (position, texture, solid, collectible, entity type, radius, scale, teleport target).
 - **`PlayerPanel.svelte`** — Edit spawn position and rotation angle (degree↔radian conversion, auto-computes camera plane).
-- **`ConfigPanel.svelte`** — Engine settings (screen size, speeds, colors).
-- **`TexturePanel.svelte`** — Per-slot texture upload/preview/clear.
+- **`ConfigPanel.svelte`** — Engine settings (screen size, texture size, speeds).
+- **`EnvironmentPanel.svelte`** — Floor/ceiling colors and textures.
+- **`TextureSelect.svelte`** — Reusable image-picker `<select>` component (uses experimental `appearance: base-select`).
+
+### Game Components (`src/lib/components/`)
+
+- **`RaycastCanvas.svelte`** — Main game canvas. Loads textures, creates `Raycaster` + `InputHandler`, runs `requestAnimationFrame` game loop. Displays FPS, minimap toggle, inventory HUD.
+- **`Minimap.svelte`** — Overhead minimap with its own RAF loop. Shows tiles, sprites, player position + direction + FOV cone.
 
 ### Data Persistence
 
-- **`data/level.json`** — Saved level data (created at runtime by API).
-- **`static/textures/`** — PNG texture files (defaults + custom uploads `tex_N.ext`).
-- **`src/lib/server/loadLevel.ts`** — Reads `data/level.json`, falls back to procedural defaults, merges `textureImages` with `DEFAULT_TEXTURE_IMAGES`.
+- **`data/config.json`** — Game config: global settings (`screenWidth`, `screenHeight`, `textureSize`, `moveSpeed`, `rotSpeed`) and texture registry (`TextureDef[]` with id/name/path).
+- **`data/levels/<id>.json`** — Per-level data: name, map (tiles), sprites, player spawn, environment config. Default level: `start.json`.
+- **`static/textures/`** — PNG texture files (defaults + custom uploads `tex_<id>.<ext>`).
+- **`src/lib/server/loadLevel.ts`** — `loadLevel()`, `loadGameConfig()`, `listLevels()`, `createDefaultLevel()`, `mergeEngineConfig()`.
 
 ## Conventions
 
 - Svelte 5 runes (`$state`, `$props`, `$derived`, `$effect`) — no legacy `let` reactivity or `export let`
-- All textures are 64x64 RGBA (configurable via `EngineConfig.textureSize`, must be power of 2 due to bitmask operations `& (size - 1)`)
-- Wall texture index in map tiles is 1-based (tile value - 1 = texture array index)
-- Y-side walls are darkened 50% (`>> 1`) for depth perception
+- All textures are 64×64 RGBA (configurable via `textureSize` in config, must be power of 2 due to bitmask operations `& (size - 1)`)
+- Wall texture index in map tiles is 1-based (tile value − 1 = texture array index); 0 = empty
+- Floor/ceiling texture index in `EnvironmentConfig` is also 1-based (0 = no texture, use solid color)
+- Y-side walls are darkened 50% (`>> 1`) for depth perception; floor textures also darkened 50%
 - Sprite textures use alpha=0 for transparency
 - Player direction is a normalized vector; camera plane is perpendicular scaled by 0.66 (≈66° FOV)
 - Collectible sprites have `solid: false`, `radius: 0`, `collectible: true`; solid sprites need `radius > 0`
+- Teleporter sprites have `entityType: 'teleporter'` and a `teleportTarget: { levelId, spawnPos?, spawnDir? }`
+- Valibot schemas validate all remote function inputs server-side
+
+## Security
+
+- **Static production build:** `adapter-static` prerenders only the public game page (`/`). `kit.prerender.entries` is set to `['/']` and `handleUnseenRoutes: 'ignore'` skips admin routes. No admin HTML, CSS, or data is generated in the build output.
+- **Prerendered remote functions:** `fetchLevel` uses `prerender()` instead of `command()`, so level data is baked into the build as static assets (no server needed at runtime).
+
+## Notes
+
+- `moveSpeed` and `rotSpeed` in config are in **units per second** (delta-time based). Typical values: `3.0` and `1.8`.
+- **Experimental CSS:** `appearance: base-select` in `TextureSelect.svelte` / `SpritePanel.svelte` has limited browser support.

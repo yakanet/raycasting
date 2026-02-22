@@ -3,6 +3,7 @@
 	import RaycastCanvas from '$lib/components/RaycastCanvas.svelte';
 	import { buildTextures, DEFAULT_LEVEL_ID } from '$lib/engine';
 	import type { TeleportTarget, Player, Sprite, WorldMap, EngineConfig, TextureDef } from '$lib/engine';
+	import { resetInventory } from '$lib/stores/inventory.svelte';
 	import { fetchLevel } from './level.remote';
 
 	let { data } = $props();
@@ -24,6 +25,7 @@
 	});
 
 	async function onTeleport(target: TeleportTarget) {
+		resetInventory();
 		const level = await fetchLevel({ levelId: target.levelId });
 		map = level.map;
 		sprites = level.sprites;

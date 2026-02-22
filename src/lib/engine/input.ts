@@ -67,8 +67,9 @@ export class InputHandler {
 		this._cleanup?.();
 	}
 
-	update(player: Player, map: WorldMap, sprites: Sprite[], config: EngineConfig, onCollect?: (sprite: Sprite) => void, onTeleport?: (sprite: Sprite) => void): void {
-		const { moveSpeed, rotSpeed } = config;
+	update(player: Player, map: WorldMap, sprites: Sprite[], config: EngineConfig, dt: number, onCollect?: (sprite: Sprite) => void, onTeleport?: (sprite: Sprite) => void): void {
+		const moveSpeed = config.moveSpeed * dt;
+		const rotSpeed = config.rotSpeed * dt;
 
 		// Mouse rotation
 		if (this.mouseRotation !== 0) {

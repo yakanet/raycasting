@@ -66,7 +66,7 @@ export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray
 	return textures;
 }
 
-function generateUnknownTexture(size: number): Uint8ClampedArray {
+export function generateUnknownTexture(size: number): Uint8ClampedArray {
 	const data = new Uint8ClampedArray(size * size * 4);
 	const half = size / 2;
 	for (let y = 0; y < size; y++) {

@@ -1,4 +1,8 @@
 import type { Player, WorldMap, RayHit, EngineConfig, Sprite } from './types';
+import { generateUnknownTexture } from './textures';
+
+/** Minimum wall distance to prevent division by zero. */
+const MIN_WALL_DIST = 1e-6;
 
 /**
  * Core raycasting renderer — produces a Wolfenstein 3D-style first-person view
@@ -22,27 +26,13 @@ export class Raycaster {
 	private imageData!: ImageData;
 	/** Per-column perpendicular wall distance — used to depth-cull sprites. */
 	private zBuffer!: Float64Array;
+	/** Reusable array for sprite sorting — avoids per-frame allocations. */
+	private spriteOrder: { sprite: Sprite; dist: number }[] = [];
 
 	constructor(config: EngineConfig, textures: Uint8ClampedArray[]) {
 		this.config = config;
 		this.textures = textures;
-		this.unknownTex = Raycaster.generateUnknownTexture(config.textureSize);
-	}
-
-	private static generateUnknownTexture(size: number): Uint8ClampedArray {
-		const data = new Uint8ClampedArray(size * size * 4);
-		const half = size / 2;
-		for (let y = 0; y < size; y++) {
-			for (let x = 0; x < size; x++) {
-				const checker = (Math.floor(x / half) + Math.floor(y / half)) % 2 === 0;
-				const i = (y * size + x) * 4;
-				data[i] = checker ? 160 : 80;
-				data[i + 1] = 0;
-				data[i + 2] = checker ? 200 : 100;
-				data[i + 3] = 255;
-			}
-		}
-		return data;
+		this.unknownTex = generateUnknownTexture(config.textureSize);
 	}
 
 	private getTexture(index: number): Uint8ClampedArray {
@@ -57,7 +47,7 @@ export class Raycaster {
 		const { screenWidth, screenHeight } = this.config;
 
 		// (Re)allocate buffer and z-buffer when screen dimensions change
-		if (!this.imageData || this.imageData.width !== screenWidth) {
+		if (!this.imageData || this.imageData.width !== screenWidth || this.imageData.height !== screenHeight) {
 			this.imageData = ctx.createImageData(screenWidth, screenHeight);
 			this.zBuffer = new Float64Array(screenWidth);
 		}
@@ -150,11 +140,12 @@ export class Raycaster {
 		}
 
 		// Perpendicular distance (not Euclidean) to avoid fisheye distortion
+		// Clamp to a small positive value to prevent division by zero
 		let wallDist: number;
 		if (side === 0) {
-			wallDist = sideDistX - deltaDistX;
+			wallDist = Math.max(sideDistX - deltaDistX, MIN_WALL_DIST);
 		} else {
-			wallDist = sideDistY - deltaDistY;
+			wallDist = Math.max(sideDistY - deltaDistY, MIN_WALL_DIST);
 		}
 
 		// Exact hit position along the wall surface, in [0, 1) — used as texture U
@@ -348,19 +339,26 @@ export class Raycaster {
 		const { screenWidth, screenHeight, textureSize } = this.config;
 
 		// Sort by distance, farthest first, so closer sprites overwrite farther ones
-		const sorted = sprites
-			.map((s, i) => ({
-				sprite: s,
-				dist: (player.pos.x - s.pos.x) ** 2 + (player.pos.y - s.pos.y) ** 2
-			}))
-			.sort((a, b) => b.dist - a.dist);
+		const order = this.spriteOrder;
+		order.length = sprites.length;
+		for (let i = 0; i < sprites.length; i++) {
+			const s = sprites[i];
+			if (order[i]) {
+				order[i].sprite = s;
+				order[i].dist = (player.pos.x - s.pos.x) ** 2 + (player.pos.y - s.pos.y) ** 2;
+			} else {
+				order[i] = { sprite: s, dist: (player.pos.x - s.pos.x) ** 2 + (player.pos.y - s.pos.y) ** 2 };
+			}
+		}
+		order.sort((a, b) => b.dist - a.dist);
 
 		// Inverse of the 2×2 camera matrix [plane.x dir.x ; plane.y dir.y]
 		// Used to transform sprite positions from world space to camera space
 		const invDet =
 			1.0 / (player.plane.x * player.dir.y - player.dir.x * player.plane.y);
 
-		for (const { sprite } of sorted) {
+		for (let si = 0; si < order.length; si++) {
+			const { sprite } = order[si];
 			// Sprite position relative to the camera
 			const spriteX = sprite.pos.x - player.pos.x;
 			const spriteY = sprite.pos.y - player.pos.y;
