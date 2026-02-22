@@ -4,6 +4,7 @@ import {
 	TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB,
 	TEX_COUNT
 } from './types';
+import type { TextureImageMap } from './types';
 
 /**
  * Generate procedural textures for walls, floor, ceiling, and sprites.
@@ -308,4 +309,67 @@ function generateBombSprite(size: number): Uint8ClampedArray {
 		}
 	}
 	return data;
+}
+
+export function loadImageAsTexture(url: string, targetSize: number): Promise<Uint8ClampedArray> {
+	return new Promise((resolve, reject) => {
+		const img = new Image();
+		img.crossOrigin = 'anonymous';
+		img.onload = () => {
+			const canvas = document.createElement('canvas');
+			canvas.width = targetSize;
+			canvas.height = targetSize;
+			const ctx = canvas.getContext('2d')!;
+			ctx.drawImage(img, 0, 0, targetSize, targetSize);
+			resolve(ctx.getImageData(0, 0, targetSize, targetSize).data);
+		};
+		img.onerror = () => reject(new Error(`Failed to load texture image: ${url}`));
+		img.src = url;
+	});
+}
+
+function generatePurpleTexture(size: number): Uint8ClampedArray {
+	const data = new Uint8ClampedArray(size * size * 4);
+	const half = size / 2;
+	for (let y = 0; y < size; y++) {
+		for (let x = 0; x < size; x++) {
+			const checker = (Math.floor(x / half) + Math.floor(y / half)) % 2 === 0;
+			const i = (y * size + x) * 4;
+			data[i] = checker ? 160 : 80;
+			data[i + 1] = 0;
+			data[i + 2] = checker ? 200 : 100;
+			data[i + 3] = 255;
+		}
+	}
+	return data;
+}
+
+export async function buildTextures(
+	size: number,
+	imageMap: TextureImageMap = {}
+): Promise<Uint8ClampedArray[]> {
+	const count = TEX_COUNT;
+	const textures = new Array<Uint8ClampedArray>(count);
+	const purple = generatePurpleTexture(size);
+
+	// Pre-fill all slots with purple fallback
+	for (let i = 0; i < count; i++) {
+		textures[i] = purple;
+	}
+
+	const entries = Object.entries(imageMap)
+		.map(([key, url]) => ({ slot: Number(key), url: url! }))
+		.filter(({ url }) => !!url);
+
+	await Promise.all(
+		entries.map(async ({ slot, url }) => {
+			try {
+				textures[slot] = await loadImageAsTexture(url, size);
+			} catch (e) {
+				console.warn(`Texture slot ${slot}: falling back to purple`, e);
+			}
+		})
+	);
+
+	return textures;
 }

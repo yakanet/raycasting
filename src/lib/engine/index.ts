@@ -1,7 +1,7 @@
 export { Raycaster } from './raycaster';
 export { InputHandler } from './input';
-export { generateTextures } from './textures';
+export { generateTextures, buildTextures, loadImageAsTexture } from './textures';
 export { createDefaultMap, createDefaultSprites, placeWall, removeWall } from './map';
-export { DEFAULT_CONFIG, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB } from './types';
+export { DEFAULT_CONFIG, DEFAULT_TEXTURE_IMAGES, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB, TEX_NAMES, TEX_COUNT } from './types';
 export { playCoinSound, playBombSound } from './audio';
-export type { Player, Sprite, WorldMap, EngineConfig, Vector2, Inventory } from './types';
+export type { Player, Sprite, WorldMap, EngineConfig, Vector2, Inventory, TextureImageMap } from './types';

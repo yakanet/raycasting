@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { TEX_NAMES } from '$lib/engine';
 	import type { Sprite } from '$lib/engine';
 
 	interface Props {
@@ -24,7 +25,7 @@
 				onkeydown={(e) => e.key === 'Enter' && onselect(i)}
 			>
 				<span class="sprite-info">
-					#{i} — tex {sprite.texture} ({sprite.pos.x.toFixed(1)}, {sprite.pos.y.toFixed(1)})
+					#{i} — {TEX_NAMES[sprite.texture] ?? `tex ${sprite.texture}`} ({sprite.pos.x.toFixed(1)}, {sprite.pos.y.toFixed(1)})
 				</span>
 				<button
 					class="remove-btn"

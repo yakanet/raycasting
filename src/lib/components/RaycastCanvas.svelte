@@ -3,7 +3,7 @@
 	import {
 		Raycaster,
 		InputHandler,
-		generateTextures,
+		buildTextures,
 		createDefaultMap,
 		createDefaultSprites,
 		DEFAULT_CONFIG,
@@ -12,7 +12,7 @@
 		playCoinSound,
 		playBombSound
 	} from '$lib/engine';
-	import type { Player, Sprite, WorldMap, EngineConfig, Inventory } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, EngineConfig, Inventory, TextureImageMap } from '$lib/engine';
 	import Minimap from './Minimap.svelte';
 
 	interface Props {
@@ -20,6 +20,7 @@
 		sprites?: Sprite[];
 		player?: Player;
 		config?: EngineConfig;
+		textureImages?: TextureImageMap;
 	}
 
 	const {
@@ -30,68 +31,82 @@
 			dir: { x: 1, y: 0 },
 			plane: { x: 0, y: 0.66 }
 		} as Player,
-		config = { ...DEFAULT_CONFIG }
+		config = { ...DEFAULT_CONFIG },
+		textureImages = {}
 	}: Props = $props();
-
-	const textures = generateTextures(config.textureSize);
 
 	let canvas: HTMLCanvasElement;
 	let fps = $state(0);
 	let showMinimap = $state(true);
 	let inventory: Inventory = $state({ coins: 0, bombs: 0 });
+	let loading = $state(true);
 
 	onMount(() => {
-		const ctx = canvas.getContext('2d')!;
-		const raycaster = new Raycaster(config, textures);
-		const input = new InputHandler(canvas);
-
-		let lastTime = performance.now();
-		let frameCount = 0;
-		let fpsTimer = 0;
 		let running = true;
+		let input: InputHandler | null = null;
 
-		function gameLoop(now: number): void {
+		(async () => {
+			const textures = await buildTextures(config.textureSize, textureImages);
+			if (!running) return;
+			loading = false;
+			await new Promise((r) => requestAnimationFrame(r));
 			if (!running) return;
 
-			const dt = now - lastTime;
-			lastTime = now;
-			frameCount++;
-			fpsTimer += dt;
+			const ctx = canvas.getContext('2d')!;
+			const raycaster = new Raycaster(config, textures);
+			input = new InputHandler(canvas);
 
-			if (fpsTimer >= 1000) {
-				fps = frameCount;
-				frameCount = 0;
-				fpsTimer = 0;
+			let lastTime = performance.now();
+			let frameCount = 0;
+			let fpsTimer = 0;
+
+			function gameLoop(now: number): void {
+				if (!running) return;
+
+				const dt = now - lastTime;
+				lastTime = now;
+				frameCount++;
+				fpsTimer += dt;
+
+				if (fpsTimer >= 1000) {
+					fps = frameCount;
+					frameCount = 0;
+					fpsTimer = 0;
+				}
+
+				input!.update(player, map, sprites, config, (sprite) => {
+					if (sprite.texture === TEX_COIN) {
+						inventory.coins++;
+						playCoinSound();
+					} else if (sprite.texture === TEX_BOMB) {
+						inventory.bombs++;
+						playBombSound();
+					}
+				});
+				raycaster.render(ctx, player, map, sprites);
+
+				requestAnimationFrame(gameLoop);
 			}
 
-			input.update(player, map, sprites, config, (sprite) => {
-				if (sprite.texture === TEX_COIN) {
-					inventory.coins++;
-					playCoinSound();
-				} else if (sprite.texture === TEX_BOMB) {
-					inventory.bombs++;
-					playBombSound();
-				}
-			});
-			raycaster.render(ctx, player, map, sprites);
-
 			requestAnimationFrame(gameLoop);
-		}
-
-		requestAnimationFrame(gameLoop);
+		})();
 
 		return () => {
 			running = false;
-			input.destroy();
+			input?.destroy();
 		};
 	});
 </script>
 
 <div class="game-container">
+	{#if loading}
+		<div class="loading">Loading textures...</div>
+	{/if}
 	<canvas
 		bind:this={canvas}
 		width={config.screenWidth}
 		height={config.screenHeight}
+		class:hidden={loading}
 	></canvas>
 
 	<div class="hud">
@@ -120,6 +135,20 @@
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
+	}
+
+	.loading {
+		color: #fff;
+		font-family: monospace;
+		font-size: 18px;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	canvas.hidden {
+		visibility: hidden;
 	}
 
 	canvas {
