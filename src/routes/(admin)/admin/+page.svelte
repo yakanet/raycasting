@@ -205,8 +205,7 @@
 		{#if mode === 'wall'}
 			<TextureSelect
 				{textures}
-				value={wallTexture}
-				onchange={(v) => (wallTexture = v)}
+				bind:value={wallTexture}
 				label="Wall texture:"
 			/>
 		{/if}
@@ -214,8 +213,7 @@
 		{#if mode === 'sprite'}
 			<TextureSelect
 				{textures}
-				value={spriteTexture}
-				onchange={(v) => (spriteTexture = v)}
+				bind:value={spriteTexture}
 				offset={0}
 				label="Sprite texture:"
 			/>

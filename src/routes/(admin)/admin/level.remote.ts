@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import { command } from '$app/server';
 import { writeFileSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { createDefaultLevel } from '$lib/server/loadLevel';
 
 const CONFIG_PATH = resolve('data/config.json');
 const LEVELS_DIR = resolve('data/levels');
@@ -106,28 +107,7 @@ export const createLevel = command(CreateLevelSchema, async ({ levelId }) => {
 	if (existsSync(levelPath)) {
 		throw new Error(`Level already exists: ${levelId}`);
 	}
-	const defaultLevel = {
-		name: levelId,
-		map: {
-			width: 20,
-			height: 20,
-			tiles: Array.from({ length: 20 }, (_, y) =>
-				Array.from({ length: 20 }, (_, x) => (x === 0 || x === 19 || y === 0 || y === 19 ? 1 : 0))
-			)
-		},
-		sprites: [],
-		player: {
-			pos: { x: 2, y: 2 },
-			dir: { x: 1, y: 0 },
-			plane: { x: 0, y: 0.66 }
-		},
-		environment: {
-			floorColor: '#555555',
-			ceilingColor: '#333366',
-			floorTexture: 6,
-			ceilingTexture: 7
-		}
-	};
+	const defaultLevel = createDefaultLevel(levelId);
 	writeFileSync(levelPath, JSON.stringify(defaultLevel, null, 2), 'utf-8');
 	return { ok: true };
 });

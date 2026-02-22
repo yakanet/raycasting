@@ -10,7 +10,6 @@
 	interface Props {
 		textures: TextureDef[];
 		value: number;
-		onchange: (value: number) => void;
 		/** If true, adds a "None" option (value = offset - 1) */
 		allowNone?: boolean;
 		/** Offset applied to texture id: emitted value = t.id + offset. Default 1 (1-based, 0 = none). Use 0 for 0-based. */
@@ -18,7 +17,7 @@
 		label?: string;
 	}
 
-	const { textures, value, onchange, allowNone = false, offset = 1, label }: Props = $props();
+	let { textures, value = $bindable(), allowNone = false, offset = 1, label }: Props = $props();
 
 	function getOffset() { return offset; }
 	const _offset = getOffset();
@@ -42,7 +41,7 @@
 <select
 	class="tex-select"
 	value={String(value)}
-	onchange={(e) => onchange(Number(e.currentTarget.value))}
+	onchange={(e) => (value = Number(e.currentTarget.value))}
 >
 	<button>
 		<selectedcontent></selectedcontent>

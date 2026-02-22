@@ -1,8 +1,9 @@
 import type { LayoutServerLoad } from './$types';
+import { DEFAULT_LEVEL_ID } from '$lib/engine';
 import { loadGameConfig, loadLevel, listLevels, mergeEngineConfig } from '$lib/server/loadLevel';
 
 export const load: LayoutServerLoad = async ({ url }) => {
-	const levelId = url.searchParams.get('level') ?? 'level-1';
+	const levelId = url.searchParams.get('level') ?? DEFAULT_LEVEL_ID;
 	const gameConfig = loadGameConfig();
 	const level = loadLevel(levelId);
 	const levels = listLevels();

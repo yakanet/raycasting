@@ -25,8 +25,7 @@
 	<div class="tex-row">
 		<TextureSelect
 			{textures}
-			value={environment.floorTexture}
-			onchange={(v) => (environment.floorTexture = v)}
+			bind:value={environment.floorTexture}
 			allowNone
 			label="Floor Texture"
 		/>
@@ -34,8 +33,7 @@
 	<div class="tex-row">
 		<TextureSelect
 			{textures}
-			value={environment.ceilingTexture}
-			onchange={(v) => (environment.ceilingTexture = v)}
+			bind:value={environment.ceilingTexture}
 			allowNone
 			label="Ceiling Texture"
 		/>

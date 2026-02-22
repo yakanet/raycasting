@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import RaycastCanvas from '$lib/components/RaycastCanvas.svelte';
-	import { buildTextures } from '$lib/engine';
+	import { buildTextures, DEFAULT_LEVEL_ID } from '$lib/engine';
 	import type { TeleportTarget, Player, Sprite, WorldMap, EngineConfig, TextureDef } from '$lib/engine';
 	import { fetchLevel } from './level.remote';
 
@@ -9,7 +9,7 @@
 
 	function getInitial() { return data; }
 	const initial = getInitial();
-	let currentLevelId = $state('level-1');
+	let currentLevelId = $state(DEFAULT_LEVEL_ID);
 	let map: WorldMap = $state(initial.map);
 	let sprites: Sprite[] = $state(initial.sprites);
 	let player: Player = $state(initial.player);

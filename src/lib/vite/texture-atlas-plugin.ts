@@ -1,30 +1,17 @@
 import { resolve, join, basename } from 'node:path';
-import { readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import type { Plugin } from 'vite';
-import type { AtlasEntry } from '../engine/types';
+import type { AtlasEntry, TextureDef, GameConfig } from '../engine/types';
 
+const CONFIG_PATH_REL = 'data/config.json';
 const TEXTURES_DIR_REL = 'static/textures';
 const VIRTUAL_MODULE_ID = 'virtual:texture-atlas';
 const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_MODULE_ID;
 const ATLAS_SERVE_PATH = '/@texture-atlas.png';
 
 const TEXTURE_SIZE = 64;
-
-function detectSlotCount(texturesDir: string): number {
-	if (!existsSync(texturesDir)) return 0;
-	const files = readdirSync(texturesDir);
-	let maxSlot = -1;
-	for (const f of files) {
-		const match = f.match(/^tex_(\d+)\./);
-		if (match) {
-			const slot = Number(match[1]);
-			if (slot > maxSlot) maxSlot = slot;
-		}
-	}
-	return maxSlot + 1;
-}
 
 interface AtlasData {
 	buffer: Buffer;
@@ -34,7 +21,16 @@ interface AtlasData {
 
 let currentAtlas: AtlasData | null = null;
 
+function loadTextureDefsFromConfig(projectRoot: string): TextureDef[] {
+	const configPath = resolve(projectRoot, CONFIG_PATH_REL);
+	if (!existsSync(configPath)) return [];
+	const raw = readFileSync(configPath, 'utf-8');
+	const config = JSON.parse(raw) as GameConfig;
+	return config.textures ?? [];
+}
+
 function resolveSlotFile(texturesDir: string, slot: number): string | null {
+	if (!existsSync(texturesDir)) return null;
 	const files = readdirSync(texturesDir);
 	const match = files.find(
 		(f) => f.startsWith(`tex_${slot}.`) && !f.endsWith('.json')
@@ -45,17 +41,18 @@ function resolveSlotFile(texturesDir: string, slot: number): string | null {
 export async function generateAtlas(projectRoot: string): Promise<AtlasData | null> {
 	const sharp = (await import('sharp')).default;
 	const texturesDir = resolve(projectRoot, TEXTURES_DIR_REL);
+	const textureDefs = loadTextureDefsFromConfig(projectRoot);
 
-	if (!existsSync(texturesDir)) {
-		return null;
-	}
+	if (textureDefs.length === 0) return null;
 
-	const slotCount = detectSlotCount(texturesDir);
+	const maxSlot = textureDefs.reduce((max, t) => Math.max(max, t.id), 0);
+	const slotCount = maxSlot + 1;
+
 	const composites: { input: Buffer; left: number; top: number }[] = [];
 	const entries: AtlasEntry[] = [];
 
-	for (let slot = 0; slot < slotCount; slot++) {
-		const filePath = resolveSlotFile(texturesDir, slot);
+	for (const def of textureDefs) {
+		const filePath = resolveSlotFile(texturesDir, def.id);
 		if (!filePath) continue;
 
 		const buf = await readFile(filePath);
@@ -71,8 +68,8 @@ export async function generateAtlas(projectRoot: string): Promise<AtlasData | nu
 			.png()
 			.toBuffer();
 
-		composites.push({ input: pngBuf, left: slot * TEXTURE_SIZE, top: 0 });
-		entries.push({ slot, name: basename(filePath), x: slot * TEXTURE_SIZE });
+		composites.push({ input: pngBuf, left: def.id * TEXTURE_SIZE, top: 0 });
+		entries.push({ slot: def.id, name: basename(filePath), x: def.id * TEXTURE_SIZE });
 	}
 
 	if (composites.length === 0) return null;
@@ -93,7 +90,7 @@ export async function generateAtlas(projectRoot: string): Promise<AtlasData | nu
 	const hash = createHash('md5').update(buffer).digest('hex').slice(0, 8);
 
 	currentAtlas = { buffer, hash, entries };
-	console.log(`[texture-atlas] Generated atlas in memory (${composites.length} textures)`);
+	console.log(`[texture-atlas] Generated atlas in memory (${composites.length} textures from config)`);
 	return currentAtlas;
 }
 
@@ -176,6 +173,7 @@ export function textureAtlasPlugin(): Plugin {
 
 		configureServer(server) {
 			const texturesDir = resolve(projectRoot, TEXTURES_DIR_REL);
+			const configPath = resolve(projectRoot, CONFIG_PATH_REL);
 
 			// Serve the atlas PNG from memory
 			server.middlewares.use((req, res, next) => {
@@ -188,15 +186,14 @@ export function textureAtlasPlugin(): Plugin {
 				next();
 			});
 
-			// Watch texture source files and regenerate
+			// Watch texture files and config for changes
 			const handleFileEvent = (filePath: string) => {
-				if (!filePath.startsWith(texturesDir)) return;
-				const name = basename(filePath);
-				// Ignore non-texture files
-				if (!name.match(/\.(png|jpe?g|webp)$/i)) return;
-				console.log(`[texture-atlas] Detected change: ${name}`);
+				const isTexture = filePath.startsWith(texturesDir) && /\.(png|jpe?g|webp)$/i.test(basename(filePath));
+				const isConfig = filePath === configPath;
+				if (!isTexture && !isConfig) return;
+
+				console.log(`[texture-atlas] Detected change: ${basename(filePath)}`);
 				rebuild().then(() => {
-					// Invalidate the virtual module so the client gets fresh data
 					const mod = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_ID);
 					if (mod) {
 						server.moduleGraph.invalidateModule(mod);

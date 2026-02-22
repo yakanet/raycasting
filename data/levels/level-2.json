@@ -185,7 +185,7 @@
       "collectible": false,
       "entityType": "teleporter",
       "teleportTarget": {
-        "levelId": "level-1",
+        "levelId": "start",
         "spawnPos": {
           "x": 2,
           "y": 2

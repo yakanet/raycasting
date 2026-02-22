@@ -16,6 +16,8 @@ export class Raycaster {
 	private config: EngineConfig;
 	/** Flat RGBA arrays, one per texture slot (length = textureSize² × 4). */
 	private textures: Uint8ClampedArray[];
+	/** Fallback texture used when a slot is out of range. */
+	private unknownTex: Uint8ClampedArray;
 	/** Pixel buffer reused across frames; recreated when screen width changes. */
 	private imageData!: ImageData;
 	/** Per-column perpendicular wall distance — used to depth-cull sprites. */
@@ -24,6 +26,27 @@ export class Raycaster {
 	constructor(config: EngineConfig, textures: Uint8ClampedArray[]) {
 		this.config = config;
 		this.textures = textures;
+		this.unknownTex = Raycaster.generateUnknownTexture(config.textureSize);
+	}
+
+	private static generateUnknownTexture(size: number): Uint8ClampedArray {
+		const data = new Uint8ClampedArray(size * size * 4);
+		const half = size / 2;
+		for (let y = 0; y < size; y++) {
+			for (let x = 0; x < size; x++) {
+				const checker = (Math.floor(x / half) + Math.floor(y / half)) % 2 === 0;
+				const i = (y * size + x) * 4;
+				data[i] = checker ? 160 : 80;
+				data[i + 1] = 0;
+				data[i + 2] = checker ? 200 : 100;
+				data[i + 3] = 255;
+			}
+		}
+		return data;
+	}
+
+	private getTexture(index: number): Uint8ClampedArray {
+		return this.textures[index] ?? this.unknownTex;
 	}
 
 	/**
@@ -173,8 +196,7 @@ export class Raycaster {
 		if (drawStart < 0) drawStart = 0;
 		if (drawEnd >= screenHeight) drawEnd = screenHeight - 1;
 
-		const tex = this.textures[hit.texNum];
-		if (!tex) return;
+		const tex = this.getTexture(hit.texNum);
 
 		// Texture X coordinate from the fractional wall hit position
 		let texX = Math.floor(hit.wallX * textureSize);
@@ -229,8 +251,8 @@ export class Raycaster {
 
 	private renderFloorCeiling(buf: Uint8ClampedArray, player: Player): void {
 		const { screenWidth, screenHeight, textureSize, floorColor, ceilingColor } = this.config;
-		const floorTex = this.config.floorTexture > 0 ? this.textures[this.config.floorTexture - 1] : null;
-		const ceilTex = this.config.ceilingTexture > 0 ? this.textures[this.config.ceilingTexture - 1] : null;
+		const floorTex = this.config.floorTexture > 0 ? this.getTexture(this.config.floorTexture - 1) : null;
+		const ceilTex = this.config.ceilingTexture > 0 ? this.getTexture(this.config.ceilingTexture - 1) : null;
 
 		// Fill with solid colors first (visible where no texture is applied)
 		const [fr, fg, fb] = Raycaster.parseColor(floorColor);
@@ -374,8 +396,7 @@ export class Raycaster {
 			const clipStartX = Math.max(0, drawStartX);
 			const clipEndX = Math.min(screenWidth - 1, drawEndX);
 
-			const tex = this.textures[sprite.texture];
-			if (!tex) continue;
+			const tex = this.getTexture(sprite.texture);
 
 			for (let x = clipStartX; x <= clipEndX; x++) {
 				// Z-buffer test: skip columns where a wall is closer

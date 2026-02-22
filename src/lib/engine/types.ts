@@ -1,3 +1,5 @@
+export const DEFAULT_LEVEL_ID = 'start';
+
 export interface Vector2 {
 	x: number;
 	y: number;
