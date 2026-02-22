@@ -10,20 +10,6 @@ const VIRTUAL_MODULE_ID = 'virtual:texture-atlas';
 const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_MODULE_ID;
 const ATLAS_SERVE_PATH = '/@texture-atlas.png';
 
-const DEFAULT_SLOT_FILES: Record<number, string> = {
-	0: 'wall_brick.png',
-	1: 'wall_stone.png',
-	2: 'wall_blue.png',
-	3: 'wall_wood.png',
-	4: 'wall_moss.png',
-	5: 'floor.png',
-	6: 'ceiling.png',
-	7: 'barrel.png',
-	8: 'pillar.png',
-	9: 'coin.png',
-	10: 'bomb.png'
-};
-
 const TEXTURE_SIZE = 64;
 const DEFAULT_SLOT_COUNT = 11;
 
@@ -51,20 +37,10 @@ let currentAtlas: AtlasData | null = null;
 
 function resolveSlotFile(texturesDir: string, slot: number): string | null {
 	const files = readdirSync(texturesDir);
-	const customFile = files.find(
+	const match = files.find(
 		(f) => f.startsWith(`tex_${slot}.`) && !f.endsWith('.json')
 	);
-	if (customFile) {
-		return join(texturesDir, customFile);
-	}
-	const defaultName = DEFAULT_SLOT_FILES[slot];
-	if (defaultName) {
-		const defaultPath = join(texturesDir, defaultName);
-		if (existsSync(defaultPath)) {
-			return defaultPath;
-		}
-	}
-	return null;
+	return match ? join(texturesDir, match) : null;
 }
 
 export async function generateAtlas(projectRoot: string): Promise<AtlasData | null> {

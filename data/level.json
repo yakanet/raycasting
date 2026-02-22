@@ -30,7 +30,7 @@
         0,
         0,
         0,
-        0,
+        12,
         0,
         0,
         0,
@@ -453,7 +453,8 @@
       },
       "texture": 7,
       "solid": true,
-      "radius": 0.3
+      "radius": 0.3,
+      "scale": 1
     },
     {
       "pos": {
@@ -462,7 +463,8 @@
       },
       "texture": 8,
       "solid": true,
-      "radius": 0.25
+      "radius": 0.25,
+      "scale": 1
     },
     {
       "pos": {
@@ -471,7 +473,8 @@
       },
       "texture": 7,
       "solid": true,
-      "radius": 0.3
+      "radius": 0.3,
+      "scale": 1
     },
     {
       "pos": {
@@ -480,7 +483,9 @@
       },
       "texture": 8,
       "solid": true,
-      "radius": 0.25
+      "radius": 0.25,
+      "scale": 1,
+      "collectible": false
     },
     {
       "pos": {
@@ -489,7 +494,8 @@
       },
       "texture": 7,
       "solid": false,
-      "radius": 0.3
+      "radius": 0.3,
+      "scale": 1
     },
     {
       "pos": {
@@ -498,7 +504,8 @@
       },
       "texture": 7,
       "solid": false,
-      "radius": 0.3
+      "radius": 0.3,
+      "scale": 1
     },
     {
       "pos": {
@@ -507,7 +514,8 @@
       },
       "texture": 8,
       "solid": true,
-      "radius": 0.25
+      "radius": 0.25,
+      "scale": 1
     },
     {
       "pos": {
@@ -516,7 +524,8 @@
       },
       "texture": 7,
       "solid": true,
-      "radius": 0.3
+      "radius": 0.3,
+      "scale": 1
     },
     {
       "pos": {
@@ -590,57 +599,62 @@
     {
       "id": 0,
       "name": "Wall: Brick",
-      "path": "/textures/wall_brick.png"
+      "path": "/textures/tex_0.png"
     },
     {
       "id": 1,
       "name": "Wall: Stone",
-      "path": "/textures/wall_stone.png"
+      "path": "/textures/tex_1.png"
     },
     {
       "id": 2,
       "name": "Wall: Blue",
-      "path": "/textures/wall_blue.png"
+      "path": "/textures/tex_2.png"
     },
     {
       "id": 3,
       "name": "Wall: Wood",
-      "path": "/textures/wall_wood.png"
+      "path": "/textures/tex_3.png"
     },
     {
       "id": 4,
       "name": "Wall: Moss",
-      "path": "/textures/wall_moss.png"
+      "path": "/textures/tex_4.png"
     },
     {
       "id": 5,
       "name": "Floor",
-      "path": "/textures/floor.png"
+      "path": "/textures/tex_5.png"
     },
     {
       "id": 6,
       "name": "Ceiling",
-      "path": "/textures/ceiling.png"
+      "path": "/textures/tex_6.png"
     },
     {
       "id": 7,
       "name": "Sprite: Barrel",
-      "path": "/textures/barrel.png"
+      "path": "/textures/tex_7.png"
     },
     {
       "id": 8,
       "name": "Sprite: Pillar",
-      "path": "/textures/pillar.png"
+      "path": "/textures/tex_8.png"
     },
     {
       "id": 9,
       "name": "Sprite: Coin",
-      "path": "/textures/coin.png"
+      "path": "/textures/tex_9.png"
     },
     {
       "id": 10,
       "name": "Sprite: Bomb",
-      "path": "/textures/bomb.png"
+      "path": "/textures/tex_10.png?v=1771727310442"
+    },
+    {
+      "id": 11,
+      "name": "SF",
+      "path": "/textures/tex_11.png?v=1771727113813"
     }
   ]
 }

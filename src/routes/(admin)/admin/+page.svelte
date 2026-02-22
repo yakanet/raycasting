@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { createDefaultMap, createDefaultSprites } from '$lib/engine';
 	import type { Player, Sprite, WorldMap, TextureDef } from '$lib/engine';
 
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
 	import SpriteList from '$lib/components/editor/SpriteList.svelte';
 	import SpritePanel from '$lib/components/editor/SpritePanel.svelte';
+	import { saveLevel } from './level.remote';
 
 	const { data } = $props();
 
@@ -53,23 +53,11 @@
 		}
 	}
 
-	function loadDefaults() {
-		map = createDefaultMap();
-		sprites = createDefaultSprites();
-		selectedSpriteIndex = -1;
-		statusMsg = 'Defaults loaded';
-	}
-
 	async function save() {
 		saving = true;
 		statusMsg = '';
 		try {
-			const res = await fetch('/api/level', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ map, sprites, player, config: data.config, textures: data.textures })
-			});
-			const result = await res.json();
+			const result = await saveLevel({ map, sprites, player, config: data.config, textures: data.textures });
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
 		} catch {
 			statusMsg = 'Error saving';
@@ -146,11 +134,10 @@
 			<button class="btn-save" onclick={save} disabled={saving}>
 				{saving ? 'Saving...' : 'Save'}
 			</button>
-			<button class="btn-defaults" onclick={loadDefaults}>Load Defaults</button>
 		</div>
 
 		{#if statusMsg}
-			<div class="status">{statusMsg}</div>
+			<div class="status" class:error={statusMsg.startsWith('Error')}>{statusMsg}</div>
 		{/if}
 	</aside>
 
@@ -357,24 +344,14 @@
 		cursor: not-allowed;
 	}
 
-	.btn-defaults {
-		background: #555;
-		border: 1px solid #777;
-		color: #fff;
-		padding: 6px 16px;
-		font-size: 13px;
-		cursor: pointer;
-		border-radius: 4px;
-	}
-
-	.btn-defaults:hover {
-		background: #666;
-	}
-
 	.status {
 		font-size: 12px;
 		color: #8c8;
 		font-family: monospace;
+	}
+
+	.status.error {
+		color: #e55;
 	}
 
 	.editor-main {

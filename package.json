@@ -9,8 +9,7 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"generate-textures": "tsx scripts/generate-textures.ts"
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
@@ -23,5 +22,8 @@
 		"svelte-check": "^4.3.6",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
+	},
+	"dependencies": {
+		"valibot": "^1.2.0"
 	}
 }

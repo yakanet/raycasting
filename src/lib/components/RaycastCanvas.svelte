@@ -4,9 +4,6 @@
 		Raycaster,
 		InputHandler,
 		buildTextures,
-		createDefaultMap,
-		createDefaultSprites,
-		DEFAULT_CONFIG,
 		TEX_COIN,
 		TEX_BOMB,
 		playCoinSound,
@@ -16,24 +13,14 @@
 	import Minimap from './Minimap.svelte';
 
 	interface Props {
-		map?: WorldMap;
-		sprites?: Sprite[];
-		player?: Player;
-		config?: EngineConfig;
-		textures?: TextureDef[];
+		map: WorldMap;
+		sprites: Sprite[];
+		player: Player;
+		config: EngineConfig;
+		textures: TextureDef[];
 	}
 
-	const {
-		map = createDefaultMap(),
-		sprites = createDefaultSprites(),
-		player = {
-			pos: { x: 2, y: 2 },
-			dir: { x: 1, y: 0 },
-			plane: { x: 0, y: 0.66 }
-		} as Player,
-		config = { ...DEFAULT_CONFIG },
-		textures = []
-	}: Props = $props();
+	const { map, sprites, player, config, textures }: Props = $props();
 
 	let canvas: HTMLCanvasElement;
 	let fps = $state(0);

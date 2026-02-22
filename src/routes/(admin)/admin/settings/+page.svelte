@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { DEFAULT_CONFIG } from '$lib/engine';
 	import type { Player, EngineConfig } from '$lib/engine';
 
 	import PlayerPanel from '$lib/components/editor/PlayerPanel.svelte';
 	import ConfigPanel from '$lib/components/editor/ConfigPanel.svelte';
+	import { saveLevel } from '../level.remote';
 
 	const { data } = $props();
 
@@ -13,32 +13,17 @@
 	let saving = $state(false);
 	let statusMsg = $state('');
 
-	function loadDefaults() {
-		player = {
-			pos: { x: 2, y: 2 },
-			dir: { x: 1, y: 0 },
-			plane: { x: 0, y: 0.66 }
-		};
-		config = { ...DEFAULT_CONFIG };
-		statusMsg = 'Defaults loaded';
-	}
-
 	async function save() {
 		saving = true;
 		statusMsg = '';
 		try {
-			const res = await fetch('/api/level', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					map: data.map,
-					sprites: data.sprites,
-					player,
-					config,
-					textures: data.textures
-				})
+			const result = await saveLevel({
+				map: data.map,
+				sprites: data.sprites,
+				player,
+				config,
+				textures: data.textures
 			});
-			const result = await res.json();
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
 		} catch {
 			statusMsg = 'Error saving';
@@ -54,9 +39,8 @@
 			<button class="btn-save" onclick={save} disabled={saving}>
 				{saving ? 'Saving...' : 'Save'}
 			</button>
-			<button class="btn-defaults" onclick={loadDefaults}>Load Defaults</button>
 			{#if statusMsg}
-				<span class="status">{statusMsg}</span>
+				<span class="status" class:error={statusMsg.startsWith('Error')}>{statusMsg}</span>
 			{/if}
 		</div>
 	</div>
@@ -102,6 +86,10 @@
 		font-family: monospace;
 	}
 
+	.status.error {
+		color: #e55;
+	}
+
 	.panels {
 		display: flex;
 		flex-direction: column;
@@ -127,17 +115,4 @@
 		cursor: not-allowed;
 	}
 
-	.btn-defaults {
-		background: #555;
-		border: 1px solid #777;
-		color: #fff;
-		padding: 6px 16px;
-		font-size: 13px;
-		cursor: pointer;
-		border-radius: 4px;
-	}
-
-	.btn-defaults:hover {
-		background: #666;
-	}
 </style>

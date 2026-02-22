@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TextureDef } from '$lib/engine';
+	import { saveLevel, uploadTexture as uploadTextureRemote } from '../level.remote';
 
 	const { data } = $props();
 
@@ -27,16 +28,12 @@
 	}
 
 	async function saveQuiet() {
-		await fetch('/api/level', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				map: data.map,
-				sprites: data.sprites,
-				player: data.player,
-				config: data.config,
-				textures
-			})
+		await saveLevel({
+			map: data.map,
+			sprites: data.sprites,
+			player: data.player,
+			config: data.config,
+			textures
 		});
 	}
 
@@ -45,12 +42,8 @@
 		try {
 			await saveQuiet();
 
-			const form = new FormData();
-			form.append('file', file);
-			form.append('slot', String(id));
-
-			const res = await fetch('/api/textures', { method: 'POST', body: form });
-			const result = await res.json();
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			const result = await uploadTextureRemote({ slot: id, filename: file.name, data: bytes });
 
 			if (result.ok) {
 				const tex = textures.find((t) => t.id === id);
@@ -81,18 +74,13 @@
 		saving = true;
 		statusMsg = '';
 		try {
-			const res = await fetch('/api/level', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					map: data.map,
-					sprites: data.sprites,
-					player: data.player,
-					config: data.config,
-					textures
-				})
+			const result = await saveLevel({
+				map: data.map,
+				sprites: data.sprites,
+				player: data.player,
+				config: data.config,
+				textures
 			});
-			const result = await res.json();
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
 		} catch {
 			statusMsg = 'Error saving';
@@ -109,7 +97,7 @@
 				{saving ? 'Saving...' : 'Save'}
 			</button>
 			{#if statusMsg}
-				<span class="status">{statusMsg}</span>
+				<span class="status" class:error={statusMsg.startsWith('Error')}>{statusMsg}</span>
 			{/if}
 		</div>
 	</div>
@@ -199,6 +187,10 @@
 		font-size: 12px;
 		color: #8c8;
 		font-family: monospace;
+	}
+
+	.status.error {
+		color: #e55;
 	}
 
 	.add-texture {

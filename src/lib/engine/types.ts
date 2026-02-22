@@ -67,19 +67,6 @@ export interface TextureDef {
 	path: string;
 }
 
-export const DEFAULT_TEXTURES: TextureDef[] = [
-	{ id: TEX_WALL_BRICK, name: 'Wall: Brick', path: '/textures/wall_brick.png' },
-	{ id: TEX_WALL_STONE, name: 'Wall: Stone', path: '/textures/wall_stone.png' },
-	{ id: TEX_WALL_BLUE, name: 'Wall: Blue', path: '/textures/wall_blue.png' },
-	{ id: TEX_WALL_WOOD, name: 'Wall: Wood', path: '/textures/wall_wood.png' },
-	{ id: TEX_WALL_MOSS, name: 'Wall: Moss', path: '/textures/wall_moss.png' },
-	{ id: TEX_FLOOR, name: 'Floor', path: '/textures/floor.png' },
-	{ id: TEX_CEILING, name: 'Ceiling', path: '/textures/ceiling.png' },
-	{ id: TEX_BARREL, name: 'Sprite: Barrel', path: '/textures/barrel.png' },
-	{ id: TEX_PILLAR, name: 'Sprite: Pillar', path: '/textures/pillar.png' },
-	{ id: TEX_COIN, name: 'Sprite: Coin', path: '/textures/coin.png' },
-	{ id: TEX_BOMB, name: 'Sprite: Bomb', path: '/textures/bomb.png' }
-];
 
 export interface AtlasManifest {
 	atlas: string;
@@ -93,12 +80,3 @@ export interface AtlasEntry {
 	x: number;
 }
 
-export const DEFAULT_CONFIG: EngineConfig = {
-	screenWidth: 960,
-	screenHeight: 600,
-	textureSize: 64,
-	moveSpeed: 0.05,
-	rotSpeed: 0.03,
-	floorColor: '#555555',
-	ceilingColor: '#333366'
-};
