@@ -6,25 +6,39 @@
 		generateTextures,
 		createDefaultMap,
 		createDefaultSprites,
-		DEFAULT_CONFIG
+		DEFAULT_CONFIG,
+		TEX_COIN,
+		TEX_BOMB,
+		playCoinSound,
+		playBombSound
 	} from '$lib/engine';
-	import type { Player } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, EngineConfig, Inventory } from '$lib/engine';
 	import Minimap from './Minimap.svelte';
 
-	const config = { ...DEFAULT_CONFIG };
-	const map = createDefaultMap();
-	const sprites = createDefaultSprites();
-	const textures = generateTextures(config.textureSize);
+	interface Props {
+		map?: WorldMap;
+		sprites?: Sprite[];
+		player?: Player;
+		config?: EngineConfig;
+	}
 
-	const player: Player = {
-		pos: { x: 2, y: 2 },
-		dir: { x: 1, y: 0 },
-		plane: { x: 0, y: 0.66 }
-	};
+	const {
+		map = createDefaultMap(),
+		sprites = createDefaultSprites(),
+		player = {
+			pos: { x: 2, y: 2 },
+			dir: { x: 1, y: 0 },
+			plane: { x: 0, y: 0.66 }
+		} as Player,
+		config = { ...DEFAULT_CONFIG }
+	}: Props = $props();
+
+	const textures = generateTextures(config.textureSize);
 
 	let canvas: HTMLCanvasElement;
 	let fps = $state(0);
 	let showMinimap = $state(true);
+	let inventory: Inventory = $state({ coins: 0, bombs: 0 });
 
 	onMount(() => {
 		const ctx = canvas.getContext('2d')!;
@@ -50,7 +64,15 @@
 				fpsTimer = 0;
 			}
 
-			input.update(player, map, config);
+			input.update(player, map, sprites, config, (sprite) => {
+				if (sprite.texture === TEX_COIN) {
+					inventory.coins++;
+					playCoinSound();
+				} else if (sprite.texture === TEX_BOMB) {
+					inventory.bombs++;
+					playBombSound();
+				}
+			});
 			raycaster.render(ctx, player, map, sprites);
 
 			requestAnimationFrame(gameLoop);
@@ -77,6 +99,10 @@
 		<button class="minimap-toggle" onclick={() => (showMinimap = !showMinimap)}>
 			{showMinimap ? 'Hide' : 'Show'} Map
 		</button>
+		<div class="inventory">
+			<span>Coins: {inventory.coins}</span>
+			<span>Bombs: {inventory.bombs}</span>
+		</div>
 	</div>
 
 	{#if showMinimap}
@@ -91,11 +117,16 @@
 <style>
 	.game-container {
 		position: relative;
-		display: inline-block;
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
 	}
 
 	canvas {
 		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
 		background: #000;
 		cursor: crosshair;
 		image-rendering: pixelated;
@@ -125,6 +156,19 @@
 		font-size: 12px;
 		cursor: pointer;
 		font-family: monospace;
+	}
+
+	.inventory {
+		display: flex;
+		gap: 12px;
+		background: rgba(0, 0, 0, 0.6);
+		padding: 2px 8px;
+		border-radius: 3px;
+		border: 1px solid #555;
+		color: #ff0;
+		font-family: monospace;
+		font-size: 14px;
+		text-shadow: 1px 1px 2px #000;
 	}
 
 	.controls-hint {

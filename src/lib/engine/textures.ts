@@ -1,36 +1,34 @@
+import {
+	TEX_WALL_BRICK, TEX_WALL_STONE, TEX_WALL_BLUE, TEX_WALL_WOOD, TEX_WALL_MOSS,
+	TEX_FLOOR, TEX_CEILING,
+	TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB,
+	TEX_COUNT
+} from './types';
+
 /**
  * Generate procedural textures for walls, floor, ceiling, and sprites.
  * Each texture is a Uint8ClampedArray of RGBA pixels (size x size x 4).
+ * Textures are assigned by constant index so the order here doesn't matter.
  */
 export function generateTextures(size: number): Uint8ClampedArray[] {
-	const textures: Uint8ClampedArray[] = [];
+	const textures = new Array<Uint8ClampedArray>(TEX_COUNT);
 
-	// Texture 0: Red brick wall
-	textures.push(generateBrickTexture(size, [180, 50, 40], [120, 30, 25]));
+	// Walls
+	textures[TEX_WALL_BRICK] = generateBrickTexture(size, [180, 50, 40], [120, 30, 25]);
+	textures[TEX_WALL_STONE] = generateStoneTexture(size, [140, 140, 140], [100, 100, 100]);
+	textures[TEX_WALL_BLUE] = generateStripeTexture(size, [50, 60, 150], [30, 40, 100]);
+	textures[TEX_WALL_WOOD] = generateWoodTexture(size, [160, 110, 60], [120, 80, 40]);
+	textures[TEX_WALL_MOSS] = generateStoneTexture(size, [80, 130, 80], [60, 100, 60]);
 
-	// Texture 1: Grey stone wall
-	textures.push(generateStoneTexture(size, [140, 140, 140], [100, 100, 100]));
+	// Floor & ceiling
+	textures[TEX_FLOOR] = generateTileTexture(size, [100, 100, 110], [80, 80, 90]);
+	textures[TEX_CEILING] = generateTileTexture(size, [70, 70, 90], [55, 55, 75]);
 
-	// Texture 2: Blue wall with stripe
-	textures.push(generateStripeTexture(size, [50, 60, 150], [30, 40, 100]));
-
-	// Texture 3: Wood planks
-	textures.push(generateWoodTexture(size, [160, 110, 60], [120, 80, 40]));
-
-	// Texture 4: Mossy stone
-	textures.push(generateStoneTexture(size, [80, 130, 80], [60, 100, 60]));
-
-	// Texture 5: Floor texture (stone tiles)
-	textures.push(generateTileTexture(size, [100, 100, 110], [80, 80, 90]));
-
-	// Texture 6: Ceiling texture (panels)
-	textures.push(generateTileTexture(size, [70, 70, 90], [55, 55, 75]));
-
-	// Texture 7: Sprite - barrel
-	textures.push(generateBarrelSprite(size));
-
-	// Texture 8: Sprite - pillar
-	textures.push(generatePillarSprite(size));
+	// Sprites
+	textures[TEX_BARREL] = generateBarrelSprite(size);
+	textures[TEX_PILLAR] = generatePillarSprite(size);
+	textures[TEX_COIN] = generateCoinSprite(size);
+	textures[TEX_BOMB] = generateBombSprite(size);
 
 	return textures;
 }
@@ -230,6 +228,82 @@ function generatePillarSprite(size: number): Uint8ClampedArray {
 				data[i + 3] = 255;
 			} else {
 				data[i + 3] = 0;
+			}
+		}
+	}
+	return data;
+}
+
+function generateCoinSprite(size: number): Uint8ClampedArray {
+	const data = new Uint8ClampedArray(size * size * 4);
+	const cx = size / 2;
+	const cy = size / 2;
+	const r = size * 0.2;
+
+	for (let y = 0; y < size; y++) {
+		for (let x = 0; x < size; x++) {
+			const dx = x - cx;
+			const dy = y - cy;
+			const dist = Math.sqrt(dx * dx + dy * dy);
+			const i = (y * size + x) * 4;
+
+			if (dist <= r) {
+				const shine = (1 - (dx * dx + dy * dy) / (r * r)) * 0.4 + 0.6;
+				const noise = (Math.random() * 10 - 5) | 0;
+				data[i] = Math.min(255, ((255 * shine + noise) | 0));
+				data[i + 1] = Math.min(255, ((210 * shine + noise) | 0));
+				data[i + 2] = Math.min(255, ((40 * shine + noise) | 0));
+				data[i + 3] = 255;
+			} else {
+				data[i + 3] = 0;
+			}
+		}
+	}
+	return data;
+}
+
+function generateBombSprite(size: number): Uint8ClampedArray {
+	const data = new Uint8ClampedArray(size * size * 4);
+	const cx = size / 2;
+	const cy = size * 0.55;
+	const r = size * 0.3;
+
+	for (let y = 0; y < size; y++) {
+		for (let x = 0; x < size; x++) {
+			const dx = x - cx;
+			const dy = y - cy;
+			const dist = Math.sqrt(dx * dx + dy * dy);
+			const i = (y * size + x) * 4;
+
+			if (dist <= r) {
+				const shine = (1 - dist / r) * 0.5;
+				const noise = (Math.random() * 6 - 3) | 0;
+				const base = (40 * shine + 15 + noise) | 0;
+				data[i] = Math.max(0, Math.min(255, base));
+				data[i + 1] = Math.max(0, Math.min(255, base));
+				data[i + 2] = Math.max(0, Math.min(255, base + 5));
+				data[i + 3] = 255;
+			} else {
+				const fuseBaseY = cy - r;
+				const fuseX = cx + (fuseBaseY - y) * 0.3;
+				if (y < fuseBaseY && y > fuseBaseY - size * 0.15 && Math.abs(x - fuseX) < 1.5) {
+					data[i] = 200;
+					data[i + 1] = 120;
+					data[i + 2] = 30;
+					data[i + 3] = 255;
+				} else if (
+					y < fuseBaseY - size * 0.12 &&
+					y > fuseBaseY - size * 0.2 &&
+					Math.abs(x - fuseX) < 3
+				) {
+					const sparkNoise = (Math.random() * 30) | 0;
+					data[i] = 255;
+					data[i + 1] = 200 + sparkNoise;
+					data[i + 2] = 50 + sparkNoise;
+					data[i + 3] = 255;
+				} else {
+					data[i + 3] = 0;
+				}
 			}
 		}
 	}

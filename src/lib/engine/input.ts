@@ -1,4 +1,4 @@
-import type { Player, WorldMap, EngineConfig } from './types';
+import type { Player, WorldMap, EngineConfig, Sprite } from './types';
 
 export class InputHandler {
 	private keys = new Set<string>();
@@ -13,11 +13,17 @@ export class InputHandler {
 
 	private setup(): void {
 		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.metaKey) return;
 			this.keys.add(e.code);
 			e.preventDefault();
 		};
 		const onKeyUp = (e: KeyboardEvent) => {
 			this.keys.delete(e.code);
+			// macOS swallows individual keyup events while Meta is held,
+			// so when Meta itself is released, clear everything.
+			if (e.key === 'Meta') {
+				this.keys.clear();
+			}
 			e.preventDefault();
 		};
 		const onMouseMove = (e: MouseEvent) => {
@@ -33,9 +39,13 @@ export class InputHandler {
 		const onPointerLockChange = () => {
 			this.mouseLocked = document.pointerLockElement === this.canvas;
 		};
+		const onBlur = () => {
+			this.keys.clear();
+		};
 
 		window.addEventListener('keydown', onKeyDown);
 		window.addEventListener('keyup', onKeyUp);
+		window.addEventListener('blur', onBlur);
 		this.canvas.addEventListener('mousemove', onMouseMove);
 		this.canvas.addEventListener('click', onClick);
 		document.addEventListener('pointerlockchange', onPointerLockChange);
@@ -43,6 +53,7 @@ export class InputHandler {
 		this._cleanup = () => {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('blur', onBlur);
 			this.canvas.removeEventListener('mousemove', onMouseMove);
 			this.canvas.removeEventListener('click', onClick);
 			document.removeEventListener('pointerlockchange', onPointerLockChange);
@@ -55,7 +66,7 @@ export class InputHandler {
 		this._cleanup?.();
 	}
 
-	update(player: Player, map: WorldMap, config: EngineConfig): void {
+	update(player: Player, map: WorldMap, sprites: Sprite[], config: EngineConfig, onCollect?: (sprite: Sprite) => void): void {
 		const { moveSpeed, rotSpeed } = config;
 
 		// Mouse rotation
@@ -66,16 +77,16 @@ export class InputHandler {
 
 		// Keyboard movement
 		if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) {
-			this.moveForward(player, map, moveSpeed);
+			this.moveForward(player, map, sprites, moveSpeed);
 		}
 		if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) {
-			this.moveForward(player, map, -moveSpeed);
+			this.moveForward(player, map, sprites, -moveSpeed);
 		}
 		if (this.keys.has('KeyA')) {
-			this.strafe(player, map, -moveSpeed);
+			this.strafe(player, map, sprites, -moveSpeed);
 		}
 		if (this.keys.has('KeyD')) {
-			this.strafe(player, map, moveSpeed);
+			this.strafe(player, map, sprites, moveSpeed);
 		}
 		if (this.keys.has('ArrowLeft')) {
 			this.rotate(player, -rotSpeed);
@@ -83,30 +94,44 @@ export class InputHandler {
 		if (this.keys.has('ArrowRight')) {
 			this.rotate(player, rotSpeed);
 		}
+
+		// Collectible pickup
+		if (onCollect) {
+			for (let i = sprites.length - 1; i >= 0; i--) {
+				const sprite = sprites[i];
+				if (!sprite.collectible) continue;
+				const dx = player.pos.x - sprite.pos.x;
+				const dy = player.pos.y - sprite.pos.y;
+				if (dx * dx + dy * dy < 0.25) {
+					onCollect(sprite);
+					sprites.splice(i, 1);
+				}
+			}
+		}
 	}
 
-	private moveForward(player: Player, map: WorldMap, speed: number): void {
+	private moveForward(player: Player, map: WorldMap, sprites: Sprite[], speed: number): void {
 		const margin = 0.2;
 		const newX = player.pos.x + player.dir.x * speed;
 		const newY = player.pos.y + player.dir.y * speed;
 
-		if (this.isWalkable(map, newX, player.pos.y, margin)) {
+		if (this.isWalkable(map, sprites, newX, player.pos.y, margin)) {
 			player.pos.x = newX;
 		}
-		if (this.isWalkable(map, player.pos.x, newY, margin)) {
+		if (this.isWalkable(map, sprites, player.pos.x, newY, margin)) {
 			player.pos.y = newY;
 		}
 	}
 
-	private strafe(player: Player, map: WorldMap, speed: number): void {
+	private strafe(player: Player, map: WorldMap, sprites: Sprite[], speed: number): void {
 		const margin = 0.2;
 		const newX = player.pos.x + player.plane.x * speed;
 		const newY = player.pos.y + player.plane.y * speed;
 
-		if (this.isWalkable(map, newX, player.pos.y, margin)) {
+		if (this.isWalkable(map, sprites, newX, player.pos.y, margin)) {
 			player.pos.x = newX;
 		}
-		if (this.isWalkable(map, player.pos.x, newY, margin)) {
+		if (this.isWalkable(map, sprites, player.pos.x, newY, margin)) {
 			player.pos.y = newY;
 		}
 	}
@@ -124,7 +149,7 @@ export class InputHandler {
 		player.plane.y = oldPlaneX * sin + player.plane.y * cos;
 	}
 
-	private isWalkable(map: WorldMap, x: number, y: number, margin: number): boolean {
+	private isWalkable(map: WorldMap, sprites: Sprite[], x: number, y: number, margin: number): boolean {
 		const mx = Math.floor(x);
 		const my = Math.floor(y);
 		if (mx < 0 || mx >= map.width || my < 0 || my >= map.height) return false;
@@ -136,7 +161,6 @@ export class InputHandler {
 				const cy = my + dy;
 				if (cx < 0 || cx >= map.width || cy < 0 || cy >= map.height) continue;
 				if (map.tiles[cy][cx] > 0) {
-					// Check if within margin
 					const closestX = Math.max(cx, Math.min(x, cx + 1));
 					const closestY = Math.max(cy, Math.min(y, cy + 1));
 					const distX = x - closestX;
@@ -147,6 +171,18 @@ export class InputHandler {
 				}
 			}
 		}
+
+		// Check solid sprites
+		for (const sprite of sprites) {
+			if (!sprite.solid) continue;
+			const dx = x - sprite.pos.x;
+			const dy = y - sprite.pos.y;
+			const minDist = margin + sprite.radius;
+			if (dx * dx + dy * dy < minDist * minDist) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import RaycastCanvas from '$lib/components/RaycastCanvas.svelte';
+
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -7,7 +9,12 @@
 </svelte:head>
 
 <main>
-	<RaycastCanvas />
+	<RaycastCanvas
+		map={data.map}
+		sprites={data.sprites}
+		player={data.player}
+		config={data.config}
+	/>
 </main>
 
 <style>

@@ -1,3 +1,4 @@
+import { TEX_FLOOR, TEX_CEILING } from './types';
 import type { Player, WorldMap, RayHit, EngineConfig, Sprite } from './types';
 
 /**
@@ -167,8 +168,8 @@ export class Raycaster {
 	 */
 	private renderFloorCeiling(buf: Uint8ClampedArray, player: Player): void {
 		const { screenWidth, screenHeight, textureSize } = this.config;
-		const floorTex = this.textures[5];
-		const ceilTex = this.textures[6];
+		const floorTex = this.textures[TEX_FLOOR];
+		const ceilTex = this.textures[TEX_CEILING];
 
 		if (!floorTex || !ceilTex) return;
 
@@ -242,11 +243,12 @@ export class Raycaster {
 			if (transformY <= 0) continue;
 
 			const spriteScreenX = Math.floor((screenWidth / 2) * (1 + transformX / transformY));
-			const spriteHeight = Math.abs(Math.floor(screenHeight / transformY));
+			const fullHeight = Math.abs(Math.floor(screenHeight / transformY));
+			const spriteHeight = Math.abs(Math.floor(fullHeight * (sprite.scale ?? 1)));
 			const spriteWidth = spriteHeight;
 
-			let drawStartY = Math.floor(-spriteHeight / 2 + screenHeight / 2);
-			let drawEndY = Math.floor(spriteHeight / 2 + screenHeight / 2);
+			const drawEndY = Math.floor(fullHeight / 2 + screenHeight / 2);
+			let drawStartY = drawEndY - spriteHeight;
 			let drawStartX = Math.floor(-spriteWidth / 2 + spriteScreenX);
 			let drawEndX = Math.floor(spriteWidth / 2 + spriteScreenX);
 

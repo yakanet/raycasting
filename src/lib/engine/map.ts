@@ -1,3 +1,4 @@
+import { TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB } from './types';
 import type { WorldMap, Sprite } from './types';
 
 /**
@@ -41,14 +42,23 @@ export function createDefaultMap(): WorldMap {
  */
 export function createDefaultSprites(): Sprite[] {
 	return [
-		{ pos: { x: 3.5, y: 8.5 }, texture: 7 },
-		{ pos: { x: 5.5, y: 4.5 }, texture: 8 },
-		{ pos: { x: 10.5, y: 3.5 }, texture: 7 },
-		{ pos: { x: 16.5, y: 5.5 }, texture: 8 },
-		{ pos: { x: 9.5, y: 9.5 }, texture: 7 },
-		{ pos: { x: 15.5, y: 14.5 }, texture: 7 },
-		{ pos: { x: 4.5, y: 15.5 }, texture: 8 },
-		{ pos: { x: 10.5, y: 17.5 }, texture: 7 }
+		{ pos: { x: 3.5, y: 8.5 }, texture: TEX_BARREL, solid: true, radius: 0.3, scale: 1 },
+		{ pos: { x: 5.5, y: 4.5 }, texture: TEX_PILLAR, solid: true, radius: 0.25, scale: 1 },
+		{ pos: { x: 10.5, y: 3.5 }, texture: TEX_BARREL, solid: true, radius: 0.3, scale: 1 },
+		{ pos: { x: 16.5, y: 5.5 }, texture: TEX_PILLAR, solid: true, radius: 0.25, scale: 1 },
+		{ pos: { x: 9.5, y: 9.5 }, texture: TEX_BARREL, solid: false, radius: 0.3, scale: 1 },
+		{ pos: { x: 15.5, y: 14.5 }, texture: TEX_BARREL, solid: false, radius: 0.3, scale: 1 },
+		{ pos: { x: 4.5, y: 15.5 }, texture: TEX_PILLAR, solid: true, radius: 0.25, scale: 1 },
+		{ pos: { x: 10.5, y: 17.5 }, texture: TEX_BARREL, solid: true, radius: 0.3, scale: 1 },
+		// Collectibles
+		{ pos: { x: 4.5, y: 2.5 }, texture: TEX_COIN, solid: false, radius: 0, scale: 0.5, collectible: true },
+		{ pos: { x: 8.5, y: 5.5 }, texture: TEX_COIN, solid: false, radius: 0, scale: 0.5, collectible: true },
+		{ pos: { x: 14.5, y: 9.5 }, texture: TEX_COIN, solid: false, radius: 0, scale: 0.5, collectible: true },
+		{ pos: { x: 6.5, y: 13.5 }, texture: TEX_COIN, solid: false, radius: 0, scale: 0.5, collectible: true },
+		{ pos: { x: 17.5, y: 2.5 }, texture: TEX_COIN, solid: false, radius: 0, scale: 0.5, collectible: true },
+		{ pos: { x: 12.5, y: 15.5 }, texture: TEX_BOMB, solid: false, radius: 0, scale: 0.8, collectible: true },
+		{ pos: { x: 3.5, y: 6.5 }, texture: TEX_BOMB, solid: false, radius: 0, scale: 0.8, collectible: true },
+		{ pos: { x: 16.5, y: 17.5 }, texture: TEX_BOMB, solid: false, radius: 0, scale: 0.8, collectible: true }
 	];
 }
 
