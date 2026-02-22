@@ -27,7 +27,7 @@ export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray
 	const maxSlot = manifest.entries.reduce((max, e) => Math.max(max, e.slot), 0);
 	const count = maxSlot + 1;
 	const textures = new Array<Uint8ClampedArray>(count);
-	const purple = generatePurpleTexture(size);
+	const purple = generateUnknownTexture(size);
 	for (let i = 0; i < count; i++) {
 		textures[i] = purple;
 	}
@@ -66,7 +66,7 @@ export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray
 	return textures;
 }
 
-function generatePurpleTexture(size: number): Uint8ClampedArray {
+function generateUnknownTexture(size: number): Uint8ClampedArray {
 	const data = new Uint8ClampedArray(size * size * 4);
 	const half = size / 2;
 	for (let y = 0; y < size; y++) {
@@ -101,11 +101,11 @@ export async function buildTextures(
 	const maxSlot = entries.reduce((max, t) => Math.max(max, t.id), 0);
 	const count = maxSlot + 1;
 	const textures = new Array<Uint8ClampedArray>(count);
-	const purple = generatePurpleTexture(size);
+	const unknown = generateUnknownTexture(size);
 
-	// Pre-fill all slots with purple fallback
+	// Pre-fill all slots with unknown fallback
 	for (let i = 0; i < count; i++) {
-		textures[i] = purple;
+		textures[i] = unknown;
 	}
 
 	await Promise.all(
