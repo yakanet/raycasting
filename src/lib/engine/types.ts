@@ -61,37 +61,25 @@ export const TEX_COIN = 9;
 export const TEX_BOMB = 10;
 export const TEX_COUNT = 11;
 
-export type TextureImageMap = Partial<Record<number, string>>;
+export interface TextureDef {
+	id: number;
+	name: string;
+	path: string;
+}
 
-export type CustomTextureNames = Record<number, string>;
-
-export const TEX_NAMES: Record<number, string> = {
-	[TEX_WALL_BRICK]: 'Wall: Brick',
-	[TEX_WALL_STONE]: 'Wall: Stone',
-	[TEX_WALL_BLUE]: 'Wall: Blue',
-	[TEX_WALL_WOOD]: 'Wall: Wood',
-	[TEX_WALL_MOSS]: 'Wall: Moss',
-	[TEX_FLOOR]: 'Floor',
-	[TEX_CEILING]: 'Ceiling',
-	[TEX_BARREL]: 'Sprite: Barrel',
-	[TEX_PILLAR]: 'Sprite: Pillar',
-	[TEX_COIN]: 'Sprite: Coin',
-	[TEX_BOMB]: 'Sprite: Bomb'
-};
-
-export const DEFAULT_TEXTURE_IMAGES: TextureImageMap = {
-	[TEX_WALL_BRICK]: '/textures/wall_brick.png',
-	[TEX_WALL_STONE]: '/textures/wall_stone.png',
-	[TEX_WALL_BLUE]: '/textures/wall_blue.png',
-	[TEX_WALL_WOOD]: '/textures/wall_wood.png',
-	[TEX_WALL_MOSS]: '/textures/wall_moss.png',
-	[TEX_FLOOR]: '/textures/floor.png',
-	[TEX_CEILING]: '/textures/ceiling.png',
-	[TEX_BARREL]: '/textures/barrel.png',
-	[TEX_PILLAR]: '/textures/pillar.png',
-	[TEX_COIN]: '/textures/coin.png',
-	[TEX_BOMB]: '/textures/bomb.png'
-};
+export const DEFAULT_TEXTURES: TextureDef[] = [
+	{ id: TEX_WALL_BRICK, name: 'Wall: Brick', path: '/textures/wall_brick.png' },
+	{ id: TEX_WALL_STONE, name: 'Wall: Stone', path: '/textures/wall_stone.png' },
+	{ id: TEX_WALL_BLUE, name: 'Wall: Blue', path: '/textures/wall_blue.png' },
+	{ id: TEX_WALL_WOOD, name: 'Wall: Wood', path: '/textures/wall_wood.png' },
+	{ id: TEX_WALL_MOSS, name: 'Wall: Moss', path: '/textures/wall_moss.png' },
+	{ id: TEX_FLOOR, name: 'Floor', path: '/textures/floor.png' },
+	{ id: TEX_CEILING, name: 'Ceiling', path: '/textures/ceiling.png' },
+	{ id: TEX_BARREL, name: 'Sprite: Barrel', path: '/textures/barrel.png' },
+	{ id: TEX_PILLAR, name: 'Sprite: Pillar', path: '/textures/pillar.png' },
+	{ id: TEX_COIN, name: 'Sprite: Coin', path: '/textures/coin.png' },
+	{ id: TEX_BOMB, name: 'Sprite: Bomb', path: '/textures/bomb.png' }
+];
 
 export interface AtlasManifest {
 	atlas: string;

@@ -14,7 +14,7 @@
 		sprites={data.sprites}
 		player={data.player}
 		config={data.config}
-		textureImages={data.textureImages}
+		textures={data.textures}
 	/>
 </main>
 

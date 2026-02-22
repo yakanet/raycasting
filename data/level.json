@@ -36,7 +36,7 @@
         0,
         0,
         0,
-        12,
+        1,
         0,
         0,
         0,
@@ -58,7 +58,7 @@
         0,
         0,
         0,
-        12,
+        1,
         0,
         0,
         0,
@@ -565,7 +565,7 @@
   ],
   "player": {
     "pos": {
-      "x": 4,
+      "x": 2,
       "y": 2
     },
     "dir": {
@@ -586,21 +586,61 @@
     "floorColor": "#555555",
     "ceilingColor": "#333366"
   },
-  "textureImages": {
-    "0": "/textures/wall_brick.png",
-    "1": "/textures/wall_stone.png",
-    "2": "/textures/wall_blue.png",
-    "3": "/textures/wall_wood.png",
-    "4": "/textures/wall_moss.png",
-    "5": "/textures/floor.png",
-    "6": "/textures/ceiling.png",
-    "7": "/textures/barrel.png",
-    "8": "/textures/pillar.png",
-    "9": "/textures/coin.png",
-    "10": "/textures/bomb.png",
-    "11": "/textures/tex_11.png?v=1771724188305"
-  },
-  "customTextureNames": {
-    "11": "Wall: Demo"
-  }
+  "textures": [
+    {
+      "id": 0,
+      "name": "Wall: Brick",
+      "path": "/textures/wall_brick.png"
+    },
+    {
+      "id": 1,
+      "name": "Wall: Stone",
+      "path": "/textures/wall_stone.png"
+    },
+    {
+      "id": 2,
+      "name": "Wall: Blue",
+      "path": "/textures/wall_blue.png"
+    },
+    {
+      "id": 3,
+      "name": "Wall: Wood",
+      "path": "/textures/wall_wood.png"
+    },
+    {
+      "id": 4,
+      "name": "Wall: Moss",
+      "path": "/textures/wall_moss.png"
+    },
+    {
+      "id": 5,
+      "name": "Floor",
+      "path": "/textures/floor.png"
+    },
+    {
+      "id": 6,
+      "name": "Ceiling",
+      "path": "/textures/ceiling.png"
+    },
+    {
+      "id": 7,
+      "name": "Sprite: Barrel",
+      "path": "/textures/barrel.png"
+    },
+    {
+      "id": 8,
+      "name": "Sprite: Pillar",
+      "path": "/textures/pillar.png"
+    },
+    {
+      "id": 9,
+      "name": "Sprite: Coin",
+      "path": "/textures/coin.png"
+    },
+    {
+      "id": 10,
+      "name": "Sprite: Bomb",
+      "path": "/textures/bomb.png"
+    }
+  ]
 }

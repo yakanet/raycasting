@@ -1,39 +1,29 @@
 <script lang="ts">
-	import { TEX_NAMES, TEX_COUNT } from '$lib/engine';
-	import type { TextureImageMap, CustomTextureNames } from '$lib/engine';
+	import type { TextureDef } from '$lib/engine';
 
 	const { data } = $props();
 
-	let textureImages: TextureImageMap = $state(structuredClone(data.textureImages ?? {}));
-	let customTextureNames: CustomTextureNames = $state(structuredClone(data.customTextureNames ?? {}));
+	let textures: TextureDef[] = $state(structuredClone(data.textures));
 	let uploading = $state<number | null>(null);
 	let saving = $state(false);
 	let statusMsg = $state('');
 	let newTextureName = $state('');
 
-	const defaultSlots = Array.from({ length: TEX_COUNT }, (_, i) => i);
-	let customSlots = $derived(
-		Object.keys(customTextureNames).map(Number).sort((a, b) => a - b)
-	);
-	let allSlots = $derived([...defaultSlots, ...customSlots]);
-
-	function getNextCustomSlot(): number {
-		const existingCustom = Object.keys(customTextureNames).map(Number);
-		if (existingCustom.length === 0) return TEX_COUNT;
-		return Math.max(TEX_COUNT, ...existingCustom) + 1;
+	function getNextId(): number {
+		if (textures.length === 0) return 0;
+		return Math.max(...textures.map((t) => t.id)) + 1;
 	}
 
-	function addCustomTexture() {
+	function addTexture() {
 		const name = newTextureName.trim();
 		if (!name) return;
-		const slot = getNextCustomSlot();
-		customTextureNames[slot] = name;
+		textures.push({ id: getNextId(), name, path: '' });
 		newTextureName = '';
 	}
 
-	function deleteCustomTexture(slot: number) {
-		delete customTextureNames[slot];
-		delete textureImages[slot];
+	function deleteTexture(id: number) {
+		const idx = textures.findIndex((t) => t.id === id);
+		if (idx !== -1) textures.splice(idx, 1);
 	}
 
 	async function saveQuiet() {
@@ -45,28 +35,26 @@
 				sprites: data.sprites,
 				player: data.player,
 				config: data.config,
-				textureImages,
-				customTextureNames
+				textures
 			})
 		});
 	}
 
-	async function uploadTexture(slot: number, file: File) {
-		uploading = slot;
+	async function uploadTexture(id: number, file: File) {
+		uploading = id;
 		try {
-			// Save current state first so the HMR full-reload won't lose it
 			await saveQuiet();
 
 			const form = new FormData();
 			form.append('file', file);
-			form.append('slot', String(slot));
+			form.append('slot', String(id));
 
 			const res = await fetch('/api/textures', { method: 'POST', body: form });
 			const result = await res.json();
 
 			if (result.ok) {
-				textureImages[slot] = result.url;
-				// Save again with the new image URL
+				const tex = textures.find((t) => t.id === id);
+				if (tex) tex.path = result.url;
 				await saveQuiet();
 			}
 		} catch (e) {
@@ -75,15 +63,16 @@
 		uploading = null;
 	}
 
-	function clearSlot(slot: number) {
-		delete textureImages[slot];
+	function clearSlot(id: number) {
+		const tex = textures.find((t) => t.id === id);
+		if (tex) tex.path = '';
 	}
 
-	function handleFileInput(slot: number, event: Event) {
+	function handleFileInput(id: number, event: Event) {
 		const input = event.target as HTMLInputElement;
 		const file = input.files?.[0];
 		if (file) {
-			uploadTexture(slot, file);
+			uploadTexture(id, file);
 			input.value = '';
 		}
 	}
@@ -100,8 +89,7 @@
 					sprites: data.sprites,
 					player: data.player,
 					config: data.config,
-					textureImages,
-					customTextureNames
+					textures
 				})
 			});
 			const result = await res.json();
@@ -110,15 +98,6 @@
 			statusMsg = 'Error saving';
 		}
 		saving = false;
-	}
-
-	function slotName(slot: number): string {
-		if (slot < TEX_COUNT) return TEX_NAMES[slot] ?? `Slot ${slot}`;
-		return customTextureNames[slot] ?? `Custom ${slot}`;
-	}
-
-	function isCustom(slot: number): boolean {
-		return slot >= TEX_COUNT;
 	}
 </script>
 
@@ -140,31 +119,27 @@
 			type="text"
 			placeholder="New texture name..."
 			bind:value={newTextureName}
-			onkeydown={(e) => e.key === 'Enter' && addCustomTexture()}
+			onkeydown={(e) => e.key === 'Enter' && addTexture()}
 		/>
-		<button class="btn-add" onclick={addCustomTexture} disabled={!newTextureName.trim()}>
+		<button class="btn-add" onclick={addTexture} disabled={!newTextureName.trim()}>
 			Add Texture
 		</button>
 	</div>
 
 	<div class="grid">
-		{#each allSlots as slot (slot)}
-			<div class="card" class:custom={isCustom(slot)}>
+		{#each textures as tex (tex.id)}
+			<div class="card">
 				<div class="card-header">
-					<span class="slot-name">{slotName(slot)}</span>
-					{#if isCustom(slot)}
-						<span class="custom-tag">Custom</span>
-					{:else if !textureImages[slot]}
-						<span class="procedural-tag">Procedural</span>
-					{/if}
+					<span class="slot-name">{tex.name}</span>
+					<span class="slot-id">#{tex.id}</span>
 				</div>
 
 				<div class="preview-area">
-					{#if textureImages[slot]}
+					{#if tex.path}
 						<img
 							class="preview"
-							src={textureImages[slot]}
-							alt={slotName(slot)}
+							src={tex.path}
+							alt={tex.name}
 						/>
 					{:else}
 						<div class="preview placeholder">?</div>
@@ -172,19 +147,18 @@
 				</div>
 
 				<div class="card-actions">
-					<label class="btn-upload" class:disabled={uploading === slot}>
-						{uploading === slot ? 'Uploading...' : 'Upload'}
+					<label class="btn-upload" class:disabled={uploading === tex.id}>
+						{uploading === tex.id ? 'Uploading...' : 'Upload'}
 						<input
 							type="file"
 							accept="image/png,image/jpeg,image/webp"
-							onchange={(e) => handleFileInput(slot, e)}
+							onchange={(e) => handleFileInput(tex.id, e)}
 							hidden
 						/>
 					</label>
-					{#if isCustom(slot)}
-						<button class="btn-delete" onclick={() => deleteCustomTexture(slot)}>Delete</button>
-					{:else if textureImages[slot]}
-						<button class="btn-clear" onclick={() => clearSlot(slot)}>Clear</button>
+					<button class="btn-delete" onclick={() => deleteTexture(tex.id)}>Delete</button>
+					{#if tex.path}
+						<button class="btn-clear" onclick={() => clearSlot(tex.id)}>Clear</button>
 					{/if}
 				</div>
 			</div>
@@ -284,10 +258,6 @@
 		gap: 10px;
 	}
 
-	.card.custom {
-		border-color: #4a6a4a;
-	}
-
 	.card-header {
 		display: flex;
 		justify-content: space-between;
@@ -300,22 +270,10 @@
 		font-weight: 500;
 	}
 
-	.procedural-tag {
+	.slot-id {
 		font-size: 10px;
-		color: #777;
-		font-style: italic;
-		background: #222;
-		padding: 1px 6px;
-		border-radius: 3px;
-	}
-
-	.custom-tag {
-		font-size: 10px;
-		color: #8c8;
-		font-style: italic;
-		background: #1a2a1a;
-		padding: 1px 6px;
-		border-radius: 3px;
+		color: #555;
+		font-family: monospace;
 	}
 
 	.preview-area {
@@ -383,9 +341,9 @@
 	}
 
 	.btn-delete {
-		background: #5a2a2a;
-		border: 1px solid #8a4a4a;
-		color: #faa;
+		background: #4a2a2a;
+		border: 1px solid #6a4a4a;
+		color: #ccc;
 		padding: 5px 10px;
 		font-size: 12px;
 		cursor: pointer;
@@ -393,7 +351,7 @@
 	}
 
 	.btn-delete:hover {
-		background: #6a3a3a;
+		background: #5a3a3a;
 	}
 
 	.btn-save {

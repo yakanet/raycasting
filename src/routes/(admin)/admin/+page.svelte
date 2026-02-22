@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { createDefaultMap, createDefaultSprites, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB, TEX_COUNT, TEX_NAMES } from '$lib/engine';
-	import type { Player, Sprite, WorldMap, CustomTextureNames } from '$lib/engine';
+	import { createDefaultMap, createDefaultSprites } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, TextureDef } from '$lib/engine';
 
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
 	import SpriteList from '$lib/components/editor/SpriteList.svelte';
 	import SpritePanel from '$lib/components/editor/SpritePanel.svelte';
-
 
 	const { data } = $props();
 
@@ -13,35 +12,24 @@
 	let sprites: Sprite[] = $state(structuredClone(data.sprites));
 	let player: Player = $state(structuredClone(data.player));
 
-	const customTextureNames: CustomTextureNames = data.customTextureNames ?? {};
-	const textureImages = data.textureImages ?? {};
+	const textures: TextureDef[] = data.textures;
 
-	// Wall textures: default slots 0-4 (tile values 1-5) + custom slots with images
-	const defaultWallSlots = [0, 1, 2, 3, 4]; // TEX_WALL_BRICK..TEX_WALL_MOSS
-	let customSlots = $derived(
-		Object.keys(customTextureNames)
-			.map(Number)
-			.filter((slot) => slot >= TEX_COUNT && textureImages[slot])
-			.sort((a, b) => a - b)
+	// All textures that have an image, usable for walls and sprites
+	let textureOptions = $derived(
+		textures
+			.filter((t) => t.path)
+			.sort((a, b) => a.id - b.id)
+			.map((t) => ({
+				slot: t.id,
+				tileValue: t.id + 1,
+				label: t.name,
+				img: t.path
+			}))
 	);
-	let wallOptions = $derived([
-		...defaultWallSlots.map((slot) => ({
-			tileValue: slot + 1,
-			slot,
-			label: (TEX_NAMES[slot] ?? `Slot ${slot}`).replace('Wall: ', ''),
-			img: textureImages[slot] as string | undefined
-		})),
-		...customSlots.map((slot) => ({
-			tileValue: slot + 1,
-			slot,
-			label: customTextureNames[slot],
-			img: textureImages[slot] as string | undefined
-		}))
-	]);
 
 	let mode: 'wall' | 'erase' | 'sprite' | 'player' = $state('wall');
-	let wallTexture = $state(1);
-	let spriteTexture = $state(TEX_BARREL);
+	let wallTexture = $state(textureOptions[0]?.tileValue ?? 1);
+	let spriteTexture = $state(textureOptions[0]?.slot ?? 0);
 	let selectedSpriteIndex = $state(-1);
 	let saving = $state(false);
 	let statusMsg = $state('');
@@ -79,7 +67,7 @@
 			const res = await fetch('/api/level', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ map, sprites, player, config: data.config, textureImages: data.textureImages, customTextureNames: data.customTextureNames })
+				body: JSON.stringify({ map, sprites, player, config: data.config, textures: data.textures })
 			});
 			const result = await res.json();
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
@@ -103,49 +91,56 @@
 		</div>
 
 		{#if mode === 'wall'}
-			<div class="texture-picker">
+			<label class="picker-label">
 				<span class="toolbar-label">Wall texture:</span>
-				{#each wallOptions as opt}
-					<button class="tex-btn" class:active={wallTexture === opt.tileValue} onclick={() => (wallTexture = opt.tileValue)} title={opt.label}>
-						{#if opt.img}
-							<img class="tex-thumb" src={opt.img} alt={opt.label} />
-						{/if}
-						<span class="tex-label">{opt.label}</span>
+				<select
+					class="tex-select"
+					value={String(wallTexture)}
+					onchange={(e) => (wallTexture = Number(e.currentTarget.value))}
+				>
+					<button>
+						<selectedcontent></selectedcontent>
 					</button>
-				{/each}
-			</div>
+					{#each textureOptions as opt}
+						<option value={String(opt.tileValue)}>
+							<img class="tex-thumb" src={opt.img} alt="" />
+							<span class="tex-label">{opt.label}</span>
+						</option>
+					{/each}
+				</select>
+			</label>
 		{/if}
 
 		{#if mode === 'sprite'}
-			<div class="texture-picker">
+			<label class="picker-label">
 				<span class="toolbar-label">Sprite texture:</span>
-				{#each [[TEX_BARREL, 'Barrel'] as const, [TEX_PILLAR, 'Pillar'] as const, [TEX_COIN, 'Coin'] as const, [TEX_BOMB, 'Bomb'] as const] as [tex, label]}
-					<button class="tex-btn" class:active={spriteTexture === tex} onclick={() => (spriteTexture = tex)} title={label}>
-						{#if textureImages[tex]}
-							<img class="tex-thumb" src={textureImages[tex]} alt={label} />
-						{/if}
-						<span class="tex-label">{label}</span>
+				<select
+					class="tex-select"
+					value={String(spriteTexture)}
+					onchange={(e) => (spriteTexture = Number(e.currentTarget.value))}
+				>
+					<button>
+						<selectedcontent></selectedcontent>
 					</button>
-				{/each}
-				{#each customSlots as slot}
-					<button class="tex-btn" class:active={spriteTexture === slot} onclick={() => (spriteTexture = slot)} title={customTextureNames[slot]}>
-						{#if textureImages[slot]}
-							<img class="tex-thumb" src={textureImages[slot]} alt={customTextureNames[slot]} />
-						{/if}
-						<span class="tex-label">{customTextureNames[slot]}</span>
-					</button>
-				{/each}
-			</div>
+					{#each textureOptions as opt}
+						<option value={String(opt.slot)}>
+							<img class="tex-thumb" src={opt.img} alt="" />
+							<span class="tex-label">{opt.label}</span>
+						</option>
+					{/each}
+				</select>
+			</label>
 		{/if}
 
 		<SpriteList
 			{sprites}
 			selectedIndex={selectedSpriteIndex}
+			{textures}
 			onselect={selectSprite}
 			onremove={removeSprite}
 		/>
 
-		<SpritePanel sprite={selectedSprite} />
+		<SpritePanel sprite={selectedSprite} {textures} />
 
 		<div class="actions">
 			<button class="btn-save" onclick={save} disabled={saving}>
@@ -197,7 +192,7 @@
 		color: #fff;
 	}
 
-	.toolbar, .texture-picker {
+	.toolbar {
 		display: flex;
 		gap: 4px;
 		align-items: center;
@@ -210,7 +205,7 @@
 		margin-right: 4px;
 	}
 
-	.toolbar button, .texture-picker button {
+	.toolbar button {
 		background: #333;
 		border: 1px solid #555;
 		color: #ccc;
@@ -220,34 +215,122 @@
 		border-radius: 3px;
 	}
 
-	.toolbar button:hover, .texture-picker button:hover {
+	.toolbar button:hover {
 		background: #444;
 	}
 
-	.toolbar button.active, .texture-picker button.active {
+	.toolbar button.active {
 		background: #2a4a6a;
 		border-color: #5a8aba;
 		color: #fff;
 	}
 
-	.tex-btn {
+	/* --- base-select texture picker --- */
+
+	.picker-label {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
 		gap: 4px;
 	}
 
+	.tex-select,
+	.tex-select::picker(select) {
+		appearance: base-select;
+	}
+
+	.tex-select {
+		background: #222;
+		border: 1px solid #555;
+		color: #ccc;
+		border-radius: 4px;
+		font-size: 12px;
+		cursor: pointer;
+		align-items: center;
+	}
+
+	.tex-select button {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 5px 8px;
+		background: inherit;
+		border: none;
+		color: inherit;
+		border-radius: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.tex-select button:hover {
+		background: #2a2a2a;
+	}
+
+	.tex-select::picker(select) {
+		background: #1a1a1a;
+		border: 1px solid #555;
+		border-radius: 6px;
+		padding: 4px 0;
+		max-height: 280px;
+		overflow-y: auto;
+	}
+
+	.tex-select option {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 10px;
+		color: #ccc;
+		cursor: pointer;
+	}
+
+	.tex-select option:hover {
+		background: #333;
+	}
+
+	.tex-select option:checked {
+		background: #2a4a6a;
+		color: #fff;
+	}
+
+	.tex-select option::checkmark {
+		display: none;
+	}
+
 	.tex-thumb {
-		width: 20px;
-		height: 20px;
+		width: 24px;
+		height: 24px;
 		image-rendering: pixelated;
 		border-radius: 2px;
 		flex-shrink: 0;
+		border: 1px solid #444;
 	}
 
 	.tex-label {
-		font-size: 11px;
+		font-size: 12px;
 		white-space: nowrap;
 	}
+
+	.tex-select selectedcontent {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	/* In the selected content button, keep the thumbnail smaller */
+	.tex-select selectedcontent .tex-thumb {
+		width: 20px;
+		height: 20px;
+	}
+
+	.tex-thumb {
+		display: block;
+	}
+
+	.tex-label {
+		line-height: 1;
+	}
+
+	/* --- end base-select --- */
 
 	.actions {
 		display: flex;

@@ -12,7 +12,7 @@
 		playCoinSound,
 		playBombSound
 	} from '$lib/engine';
-	import type { Player, Sprite, WorldMap, EngineConfig, Inventory, TextureImageMap } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, EngineConfig, Inventory, TextureDef } from '$lib/engine';
 	import Minimap from './Minimap.svelte';
 
 	interface Props {
@@ -20,7 +20,7 @@
 		sprites?: Sprite[];
 		player?: Player;
 		config?: EngineConfig;
-		textureImages?: TextureImageMap;
+		textures?: TextureDef[];
 	}
 
 	const {
@@ -32,7 +32,7 @@
 			plane: { x: 0, y: 0.66 }
 		} as Player,
 		config = { ...DEFAULT_CONFIG },
-		textureImages = {}
+		textures = []
 	}: Props = $props();
 
 	let canvas: HTMLCanvasElement;
@@ -46,14 +46,14 @@
 		let input: InputHandler | null = null;
 
 		(async () => {
-			const textures = await buildTextures(config.textureSize, textureImages);
+			const loadedTextures = await buildTextures(config.textureSize, textures);
 			if (!running) return;
 			loading = false;
 			await new Promise((r) => requestAnimationFrame(r));
 			if (!running) return;
 
 			const ctx = canvas.getContext('2d')!;
-			const raycaster = new Raycaster(config, textures);
+			const raycaster = new Raycaster(config, loadedTextures);
 			input = new InputHandler(canvas);
 
 			let lastTime = performance.now();

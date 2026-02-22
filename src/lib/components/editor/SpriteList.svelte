@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { TEX_NAMES } from '$lib/engine';
-	import type { Sprite } from '$lib/engine';
+	import type { Sprite, TextureDef } from '$lib/engine';
 
 	interface Props {
 		sprites: Sprite[];
 		selectedIndex: number;
+		textures: TextureDef[];
 		onselect: (index: number) => void;
 		onremove: (index: number) => void;
 	}
 
-	let { sprites, selectedIndex, onselect, onremove }: Props = $props();
+	let { sprites, selectedIndex, textures, onselect, onremove }: Props = $props();
 </script>
 
 <div class="sprite-list">
@@ -25,7 +25,7 @@
 				onkeydown={(e) => e.key === 'Enter' && onselect(i)}
 			>
 				<span class="sprite-info">
-					#{i} — {TEX_NAMES[sprite.texture] ?? `tex ${sprite.texture}`} ({sprite.pos.x.toFixed(1)}, {sprite.pos.y.toFixed(1)})
+					#{i} — {textures.find(t => t.id === sprite.texture)?.name ?? `tex ${sprite.texture}`} ({sprite.pos.x.toFixed(1)}, {sprite.pos.y.toFixed(1)})
 				</span>
 				<button
 					class="remove-btn"

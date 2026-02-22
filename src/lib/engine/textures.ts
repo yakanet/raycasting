@@ -4,7 +4,7 @@ import {
 	TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB,
 	TEX_COUNT
 } from './types';
-import type { TextureImageMap, AtlasManifest } from './types';
+import type { TextureDef, AtlasManifest } from './types';
 import atlasManifest from 'virtual:texture-atlas';
 
 /**
@@ -395,7 +395,7 @@ function generatePurpleTexture(size: number): Uint8ClampedArray {
 
 export async function buildTextures(
 	size: number,
-	imageMap: TextureImageMap = {}
+	textureDefs: TextureDef[] = []
 ): Promise<Uint8ClampedArray[]> {
 	// Try atlas loading first (single HTTP request)
 	try {
@@ -407,11 +407,9 @@ export async function buildTextures(
 	}
 
 	// Fallback: load individual images
-	const entries = Object.entries(imageMap)
-		.map(([key, url]) => ({ slot: Number(key), url: url! }))
-		.filter(({ url }) => !!url);
+	const entries = textureDefs.filter((t) => t.path);
 
-	const maxSlot = entries.reduce((max, e) => Math.max(max, e.slot), 0);
+	const maxSlot = entries.reduce((max, t) => Math.max(max, t.id), 0);
 	const count = Math.max(TEX_COUNT, maxSlot + 1);
 	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);
@@ -422,11 +420,11 @@ export async function buildTextures(
 	}
 
 	await Promise.all(
-		entries.map(async ({ slot, url }) => {
+		entries.map(async (tex) => {
 			try {
-				textures[slot] = await loadImageAsTexture(url, size);
+				textures[tex.id] = await loadImageAsTexture(tex.path, size);
 			} catch (e) {
-				console.warn(`Texture slot ${slot}: falling back to purple`, e);
+				console.warn(`Texture slot ${tex.id}: falling back to purple`, e);
 			}
 		})
 	);

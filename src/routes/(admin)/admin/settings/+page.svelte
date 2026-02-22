@@ -35,8 +35,7 @@
 					sprites: data.sprites,
 					player,
 					config,
-					textureImages: data.textureImages,
-					customTextureNames: data.customTextureNames
+					textures: data.textures
 				})
 			});
 			const result = await res.json();

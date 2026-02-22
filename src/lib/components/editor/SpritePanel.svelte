@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB } from '$lib/engine';
-	import type { Sprite } from '$lib/engine';
+	import type { Sprite, TextureDef } from '$lib/engine';
 
 	interface Props {
 		sprite: Sprite | null;
+		textures: TextureDef[];
 	}
 
-	let { sprite }: Props = $props();
+	let { sprite, textures }: Props = $props();
 </script>
 
 {#if sprite}
@@ -20,11 +20,22 @@
 		</label>
 		<label>
 			Texture
-			<select bind:value={sprite.texture}>
-				<option value={TEX_BARREL}>Barrel</option>
-				<option value={TEX_PILLAR}>Pillar</option>
-				<option value={TEX_COIN}>Coin</option>
-				<option value={TEX_BOMB}>Bomb</option>
+			<select
+				class="tex-select"
+				value={String(sprite.texture)}
+				onchange={(e) => (sprite.texture = Number(e.currentTarget.value))}
+			>
+				<button>
+					<selectedcontent></selectedcontent>
+				</button>
+				{#each textures as tex}
+					<option value={String(tex.id)}>
+						{#if tex.path}
+							<img class="tex-thumb" src={tex.path} alt="" />
+						{/if}
+						<span class="tex-label">{tex.name}</span>
+					</option>
+				{/each}
 			</select>
 		</label>
 		<label class="checkbox">
@@ -94,12 +105,87 @@
 		border-radius: 3px;
 	}
 
-	select {
+	/* --- base-select --- */
+
+	.tex-select,
+	.tex-select::picker(select) {
+		appearance: base-select;
+	}
+
+	.tex-select {
 		background: #222;
 		border: 1px solid #555;
 		color: #fff;
-		padding: 2px 4px;
-		font-size: 12px;
 		border-radius: 3px;
+		font-size: 12px;
+		cursor: pointer;
+		flex: 1;
+		align-items: center;
+	}
+
+	.tex-select button {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 6px;
+		background: inherit;
+		border: none;
+		color: inherit;
+		border-radius: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.tex-select::picker(select) {
+		background: #1a1a1a;
+		border: 1px solid #555;
+		border-radius: 6px;
+		padding: 4px 0;
+		max-height: 240px;
+		overflow-y: auto;
+	}
+
+	.tex-select option {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 8px;
+		color: #ccc;
+		cursor: pointer;
+	}
+
+	.tex-select option:hover {
+		background: #333;
+	}
+
+	.tex-select option:checked {
+		background: #2a4a6a;
+		color: #fff;
+	}
+
+	.tex-select option::checkmark {
+		display: none;
+	}
+
+	.tex-select selectedcontent {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.tex-thumb {
+		width: 20px;
+		height: 20px;
+		image-rendering: pixelated;
+		border-radius: 2px;
+		flex-shrink: 0;
+		border: 1px solid #444;
+		display: block;
+	}
+
+	.tex-label {
+		font-size: 12px;
+		white-space: nowrap;
+		line-height: 1;
 	}
 </style>
