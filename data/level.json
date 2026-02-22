@@ -36,7 +36,7 @@
         0,
         0,
         0,
-        0,
+        12,
         0,
         0,
         0,
@@ -58,7 +58,7 @@
         0,
         0,
         0,
-        0,
+        12,
         0,
         0,
         0,
@@ -585,5 +585,22 @@
     "rotSpeed": 0.03,
     "floorColor": "#555555",
     "ceilingColor": "#333366"
+  },
+  "textureImages": {
+    "0": "/textures/wall_brick.png",
+    "1": "/textures/wall_stone.png",
+    "2": "/textures/wall_blue.png",
+    "3": "/textures/wall_wood.png",
+    "4": "/textures/wall_moss.png",
+    "5": "/textures/floor.png",
+    "6": "/textures/ceiling.png",
+    "7": "/textures/barrel.png",
+    "8": "/textures/pillar.png",
+    "9": "/textures/coin.png",
+    "10": "/textures/bomb.png",
+    "11": "/textures/tex_11.png?v=1771724188305"
+  },
+  "customTextureNames": {
+    "11": "Wall: Demo"
   }
 }

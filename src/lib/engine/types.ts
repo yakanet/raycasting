@@ -63,6 +63,8 @@ export const TEX_COUNT = 11;
 
 export type TextureImageMap = Partial<Record<number, string>>;
 
+export type CustomTextureNames = Record<number, string>;
+
 export const TEX_NAMES: Record<number, string> = {
 	[TEX_WALL_BRICK]: 'Wall: Brick',
 	[TEX_WALL_STONE]: 'Wall: Stone',

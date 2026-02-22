@@ -1,19 +1,62 @@
 <script lang="ts">
 	import { TEX_NAMES, TEX_COUNT } from '$lib/engine';
-	import type { TextureImageMap } from '$lib/engine';
+	import type { TextureImageMap, CustomTextureNames } from '$lib/engine';
 
 	const { data } = $props();
 
 	let textureImages: TextureImageMap = $state(structuredClone(data.textureImages ?? {}));
+	let customTextureNames: CustomTextureNames = $state(structuredClone(data.customTextureNames ?? {}));
 	let uploading = $state<number | null>(null);
 	let saving = $state(false);
 	let statusMsg = $state('');
+	let newTextureName = $state('');
 
-	const slots = Array.from({ length: TEX_COUNT }, (_, i) => i);
+	const defaultSlots = Array.from({ length: TEX_COUNT }, (_, i) => i);
+	let customSlots = $derived(
+		Object.keys(customTextureNames).map(Number).sort((a, b) => a - b)
+	);
+	let allSlots = $derived([...defaultSlots, ...customSlots]);
+
+	function getNextCustomSlot(): number {
+		const existingCustom = Object.keys(customTextureNames).map(Number);
+		if (existingCustom.length === 0) return TEX_COUNT;
+		return Math.max(TEX_COUNT, ...existingCustom) + 1;
+	}
+
+	function addCustomTexture() {
+		const name = newTextureName.trim();
+		if (!name) return;
+		const slot = getNextCustomSlot();
+		customTextureNames[slot] = name;
+		newTextureName = '';
+	}
+
+	function deleteCustomTexture(slot: number) {
+		delete customTextureNames[slot];
+		delete textureImages[slot];
+	}
+
+	async function saveQuiet() {
+		await fetch('/api/level', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				map: data.map,
+				sprites: data.sprites,
+				player: data.player,
+				config: data.config,
+				textureImages,
+				customTextureNames
+			})
+		});
+	}
 
 	async function uploadTexture(slot: number, file: File) {
 		uploading = slot;
 		try {
+			// Save current state first so the HMR full-reload won't lose it
+			await saveQuiet();
+
 			const form = new FormData();
 			form.append('file', file);
 			form.append('slot', String(slot));
@@ -23,6 +66,8 @@
 
 			if (result.ok) {
 				textureImages[slot] = result.url;
+				// Save again with the new image URL
+				await saveQuiet();
 			}
 		} catch (e) {
 			console.error('Upload failed', e);
@@ -55,7 +100,8 @@
 					sprites: data.sprites,
 					player: data.player,
 					config: data.config,
-					textureImages
+					textureImages,
+					customTextureNames
 				})
 			});
 			const result = await res.json();
@@ -64,6 +110,15 @@
 			statusMsg = 'Error saving';
 		}
 		saving = false;
+	}
+
+	function slotName(slot: number): string {
+		if (slot < TEX_COUNT) return TEX_NAMES[slot] ?? `Slot ${slot}`;
+		return customTextureNames[slot] ?? `Custom ${slot}`;
+	}
+
+	function isCustom(slot: number): boolean {
+		return slot >= TEX_COUNT;
 	}
 </script>
 
@@ -80,12 +135,26 @@
 		</div>
 	</div>
 
+	<div class="add-texture">
+		<input
+			type="text"
+			placeholder="New texture name..."
+			bind:value={newTextureName}
+			onkeydown={(e) => e.key === 'Enter' && addCustomTexture()}
+		/>
+		<button class="btn-add" onclick={addCustomTexture} disabled={!newTextureName.trim()}>
+			Add Texture
+		</button>
+	</div>
+
 	<div class="grid">
-		{#each slots as slot}
-			<div class="card">
+		{#each allSlots as slot (slot)}
+			<div class="card" class:custom={isCustom(slot)}>
 				<div class="card-header">
-					<span class="slot-name">{TEX_NAMES[slot] ?? `Slot ${slot}`}</span>
-					{#if !textureImages[slot]}
+					<span class="slot-name">{slotName(slot)}</span>
+					{#if isCustom(slot)}
+						<span class="custom-tag">Custom</span>
+					{:else if !textureImages[slot]}
 						<span class="procedural-tag">Procedural</span>
 					{/if}
 				</div>
@@ -95,7 +164,7 @@
 						<img
 							class="preview"
 							src={textureImages[slot]}
-							alt={TEX_NAMES[slot]}
+							alt={slotName(slot)}
 						/>
 					{:else}
 						<div class="preview placeholder">?</div>
@@ -112,7 +181,9 @@
 							hidden
 						/>
 					</label>
-					{#if textureImages[slot]}
+					{#if isCustom(slot)}
+						<button class="btn-delete" onclick={() => deleteCustomTexture(slot)}>Delete</button>
+					{:else if textureImages[slot]}
 						<button class="btn-clear" onclick={() => clearSlot(slot)}>Clear</button>
 					{/if}
 				</div>
@@ -156,6 +227,47 @@
 		font-family: monospace;
 	}
 
+	.add-texture {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 20px;
+	}
+
+	.add-texture input {
+		flex: 1;
+		max-width: 300px;
+		background: #222;
+		border: 1px solid #444;
+		color: #ccc;
+		padding: 6px 10px;
+		font-size: 13px;
+		border-radius: 4px;
+		outline: none;
+	}
+
+	.add-texture input:focus {
+		border-color: #5a8aba;
+	}
+
+	.btn-add {
+		background: #2a4a6a;
+		border: 1px solid #5a8aba;
+		color: #fff;
+		padding: 6px 16px;
+		font-size: 13px;
+		cursor: pointer;
+		border-radius: 4px;
+	}
+
+	.btn-add:hover {
+		background: #3a5a7a;
+	}
+
+	.btn-add:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -170,6 +282,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+	}
+
+	.card.custom {
+		border-color: #4a6a4a;
 	}
 
 	.card-header {
@@ -189,6 +305,15 @@
 		color: #777;
 		font-style: italic;
 		background: #222;
+		padding: 1px 6px;
+		border-radius: 3px;
+	}
+
+	.custom-tag {
+		font-size: 10px;
+		color: #8c8;
+		font-style: italic;
+		background: #1a2a1a;
 		padding: 1px 6px;
 		border-radius: 3px;
 	}
@@ -255,6 +380,20 @@
 
 	.btn-clear:hover {
 		background: #5a3a3a;
+	}
+
+	.btn-delete {
+		background: #5a2a2a;
+		border: 1px solid #8a4a4a;
+		color: #faa;
+		padding: 5px 10px;
+		font-size: 12px;
+		cursor: pointer;
+		border-radius: 4px;
+	}
+
+	.btn-delete:hover {
+		background: #6a3a3a;
 	}
 
 	.btn-save {

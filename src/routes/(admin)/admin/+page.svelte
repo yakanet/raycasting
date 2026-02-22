@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { createDefaultMap, createDefaultSprites, DEFAULT_CONFIG, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB } from '$lib/engine';
-	import type { Player, Sprite, WorldMap, EngineConfig } from '$lib/engine';
+	import { createDefaultMap, createDefaultSprites, TEX_BARREL, TEX_PILLAR, TEX_COIN, TEX_BOMB, TEX_COUNT, TEX_NAMES } from '$lib/engine';
+	import type { Player, Sprite, WorldMap, CustomTextureNames } from '$lib/engine';
 
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
 	import SpriteList from '$lib/components/editor/SpriteList.svelte';
 	import SpritePanel from '$lib/components/editor/SpritePanel.svelte';
-	import PlayerPanel from '$lib/components/editor/PlayerPanel.svelte';
-	import ConfigPanel from '$lib/components/editor/ConfigPanel.svelte';
 
 
 	const { data } = $props();
@@ -14,7 +12,32 @@
 	let map: WorldMap = $state(structuredClone(data.map));
 	let sprites: Sprite[] = $state(structuredClone(data.sprites));
 	let player: Player = $state(structuredClone(data.player));
-	let config: EngineConfig = $state(structuredClone(data.config));
+
+	const customTextureNames: CustomTextureNames = data.customTextureNames ?? {};
+	const textureImages = data.textureImages ?? {};
+
+	// Wall textures: default slots 0-4 (tile values 1-5) + custom slots with images
+	const defaultWallSlots = [0, 1, 2, 3, 4]; // TEX_WALL_BRICK..TEX_WALL_MOSS
+	let customSlots = $derived(
+		Object.keys(customTextureNames)
+			.map(Number)
+			.filter((slot) => slot >= TEX_COUNT && textureImages[slot])
+			.sort((a, b) => a - b)
+	);
+	let wallOptions = $derived([
+		...defaultWallSlots.map((slot) => ({
+			tileValue: slot + 1,
+			slot,
+			label: (TEX_NAMES[slot] ?? `Slot ${slot}`).replace('Wall: ', ''),
+			img: textureImages[slot] as string | undefined
+		})),
+		...customSlots.map((slot) => ({
+			tileValue: slot + 1,
+			slot,
+			label: customTextureNames[slot],
+			img: textureImages[slot] as string | undefined
+		}))
+	]);
 
 	let mode: 'wall' | 'erase' | 'sprite' | 'player' = $state('wall');
 	let wallTexture = $state(1);
@@ -45,12 +68,6 @@
 	function loadDefaults() {
 		map = createDefaultMap();
 		sprites = createDefaultSprites();
-		player = {
-			pos: { x: 2, y: 2 },
-			dir: { x: 1, y: 0 },
-			plane: { x: 0, y: 0.66 }
-		};
-		config = { ...DEFAULT_CONFIG };
 		selectedSpriteIndex = -1;
 		statusMsg = 'Defaults loaded';
 	}
@@ -62,7 +79,7 @@
 			const res = await fetch('/api/level', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ map, sprites, player, config, textureImages: data.textureImages })
+				body: JSON.stringify({ map, sprites, player, config: data.config, textureImages: data.textureImages, customTextureNames: data.customTextureNames })
 			});
 			const result = await res.json();
 			statusMsg = result.ok ? 'Saved!' : 'Error saving';
@@ -88,9 +105,12 @@
 		{#if mode === 'wall'}
 			<div class="texture-picker">
 				<span class="toolbar-label">Wall texture:</span>
-				{#each [1, 2, 3, 4, 5] as tex}
-					<button class:active={wallTexture === tex} onclick={() => (wallTexture = tex)}>
-						{tex}
+				{#each wallOptions as opt}
+					<button class="tex-btn" class:active={wallTexture === opt.tileValue} onclick={() => (wallTexture = opt.tileValue)} title={opt.label}>
+						{#if opt.img}
+							<img class="tex-thumb" src={opt.img} alt={opt.label} />
+						{/if}
+						<span class="tex-label">{opt.label}</span>
 					</button>
 				{/each}
 			</div>
@@ -99,18 +119,22 @@
 		{#if mode === 'sprite'}
 			<div class="texture-picker">
 				<span class="toolbar-label">Sprite texture:</span>
-				<button class:active={spriteTexture === TEX_BARREL} onclick={() => (spriteTexture = TEX_BARREL)}>
-					Barrel
-				</button>
-				<button class:active={spriteTexture === TEX_PILLAR} onclick={() => (spriteTexture = TEX_PILLAR)}>
-					Pillar
-				</button>
-				<button class:active={spriteTexture === TEX_COIN} onclick={() => (spriteTexture = TEX_COIN)}>
-					Coin
-				</button>
-				<button class:active={spriteTexture === TEX_BOMB} onclick={() => (spriteTexture = TEX_BOMB)}>
-					Bomb
-				</button>
+				{#each [[TEX_BARREL, 'Barrel'] as const, [TEX_PILLAR, 'Pillar'] as const, [TEX_COIN, 'Coin'] as const, [TEX_BOMB, 'Bomb'] as const] as [tex, label]}
+					<button class="tex-btn" class:active={spriteTexture === tex} onclick={() => (spriteTexture = tex)} title={label}>
+						{#if textureImages[tex]}
+							<img class="tex-thumb" src={textureImages[tex]} alt={label} />
+						{/if}
+						<span class="tex-label">{label}</span>
+					</button>
+				{/each}
+				{#each customSlots as slot}
+					<button class="tex-btn" class:active={spriteTexture === slot} onclick={() => (spriteTexture = slot)} title={customTextureNames[slot]}>
+						{#if textureImages[slot]}
+							<img class="tex-thumb" src={textureImages[slot]} alt={customTextureNames[slot]} />
+						{/if}
+						<span class="tex-label">{customTextureNames[slot]}</span>
+					</button>
+				{/each}
 			</div>
 		{/if}
 
@@ -122,10 +146,6 @@
 		/>
 
 		<SpritePanel sprite={selectedSprite} />
-
-		<PlayerPanel {player} />
-
-		<ConfigPanel {config} />
 
 		<div class="actions">
 			<button class="btn-save" onclick={save} disabled={saving}>
@@ -208,6 +228,25 @@
 		background: #2a4a6a;
 		border-color: #5a8aba;
 		color: #fff;
+	}
+
+	.tex-btn {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.tex-thumb {
+		width: 20px;
+		height: 20px;
+		image-rendering: pixelated;
+		border-radius: 2px;
+		flex-shrink: 0;
+	}
+
+	.tex-label {
+		font-size: 11px;
+		white-space: nowrap;
 	}
 
 	.actions {

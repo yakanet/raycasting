@@ -2,7 +2,6 @@ import { json, error } from '@sveltejs/kit';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, extname } from 'node:path';
 import type { RequestHandler } from './$types';
-import { TEX_COUNT } from '$lib/engine';
 
 const TEXTURES_DIR = resolve('static/textures');
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -17,8 +16,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const slot = Number(slotStr);
-	if (!Number.isInteger(slot) || slot < 0 || slot >= TEX_COUNT) {
-		return error(400, `Invalid slot: must be 0-${TEX_COUNT - 1}`);
+	if (!Number.isInteger(slot) || slot < 0) {
+		return error(400, 'Invalid slot: must be a non-negative integer');
 	}
 
 	if (!ALLOWED_TYPES.includes(file.type)) {

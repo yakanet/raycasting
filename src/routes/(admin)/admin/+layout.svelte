@@ -5,16 +5,23 @@
 	let { children }: { children: Snippet } = $props();
 
 	let pathname = $derived($page.url.pathname);
+
+	const titles: Record<string, string> = {
+		'/admin': 'Level Editor',
+		'/admin/textures': 'Textures',
+		'/admin/settings': 'Game Settings'
+	};
 </script>
 
 <svelte:head>
-	<title>{pathname === '/admin/textures' ? 'Textures' : 'Level Editor'}</title>
+	<title>{titles[pathname] ?? 'Admin'}</title>
 </svelte:head>
 
 <div class="admin-shell">
 	<nav class="admin-nav">
 		<a href="/admin" class:active={pathname === '/admin'}>Level Editor</a>
 		<a href="/admin/textures" class:active={pathname === '/admin/textures'}>Textures</a>
+		<a href="/admin/settings" class:active={pathname === '/admin/settings'}>Game Settings</a>
 		<a href="/" data-sveltekit-preload-data="off">Play</a>
 	</nav>
 

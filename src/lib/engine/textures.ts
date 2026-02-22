@@ -335,9 +335,11 @@ export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray
 		throw new Error('No atlas available');
 	}
 
-	const textures = new Array<Uint8ClampedArray>(TEX_COUNT);
+	const maxSlot = manifest.entries.reduce((max, e) => Math.max(max, e.slot), 0);
+	const count = Math.max(TEX_COUNT, maxSlot + 1);
+	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);
-	for (let i = 0; i < TEX_COUNT; i++) {
+	for (let i = 0; i < count; i++) {
 		textures[i] = purple;
 	}
 
@@ -405,7 +407,12 @@ export async function buildTextures(
 	}
 
 	// Fallback: load individual images
-	const count = TEX_COUNT;
+	const entries = Object.entries(imageMap)
+		.map(([key, url]) => ({ slot: Number(key), url: url! }))
+		.filter(({ url }) => !!url);
+
+	const maxSlot = entries.reduce((max, e) => Math.max(max, e.slot), 0);
+	const count = Math.max(TEX_COUNT, maxSlot + 1);
 	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);
 
@@ -413,10 +420,6 @@ export async function buildTextures(
 	for (let i = 0; i < count; i++) {
 		textures[i] = purple;
 	}
-
-	const entries = Object.entries(imageMap)
-		.map(([key, url]) => ({ slot: Number(key), url: url! }))
-		.filter(({ url }) => !!url);
 
 	await Promise.all(
 		entries.map(async ({ slot, url }) => {

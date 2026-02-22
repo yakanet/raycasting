@@ -25,7 +25,21 @@ const DEFAULT_SLOT_FILES: Record<number, string> = {
 };
 
 const TEXTURE_SIZE = 64;
-const SLOT_COUNT = 11;
+const DEFAULT_SLOT_COUNT = 11;
+
+function detectSlotCount(texturesDir: string): number {
+	if (!existsSync(texturesDir)) return DEFAULT_SLOT_COUNT;
+	const files = readdirSync(texturesDir);
+	let maxSlot = DEFAULT_SLOT_COUNT - 1; // at least 0..10
+	for (const f of files) {
+		const match = f.match(/^tex_(\d+)\./);
+		if (match) {
+			const slot = Number(match[1]);
+			if (slot > maxSlot) maxSlot = slot;
+		}
+	}
+	return maxSlot + 1;
+}
 
 interface AtlasData {
 	buffer: Buffer;
@@ -61,10 +75,11 @@ export async function generateAtlas(projectRoot: string): Promise<AtlasData | nu
 		return null;
 	}
 
+	const slotCount = detectSlotCount(texturesDir);
 	const composites: { input: Buffer; left: number; top: number }[] = [];
 	const entries: AtlasEntry[] = [];
 
-	for (let slot = 0; slot < SLOT_COUNT; slot++) {
+	for (let slot = 0; slot < slotCount; slot++) {
 		const filePath = resolveSlotFile(texturesDir, slot);
 		if (!filePath) continue;
 
@@ -87,7 +102,7 @@ export async function generateAtlas(projectRoot: string): Promise<AtlasData | nu
 
 	if (composites.length === 0) return null;
 
-	const atlasWidth = SLOT_COUNT * TEXTURE_SIZE;
+	const atlasWidth = slotCount * TEXTURE_SIZE;
 	const buffer = await sharp({
 		create: {
 			width: atlasWidth,

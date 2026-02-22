@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createDefaultMap, createDefaultSprites, DEFAULT_CONFIG, DEFAULT_TEXTURE_IMAGES } from '$lib/engine';
-import type { Player, Sprite, WorldMap, EngineConfig, TextureImageMap } from '$lib/engine';
+import type { Player, Sprite, WorldMap, EngineConfig, TextureImageMap, CustomTextureNames } from '$lib/engine';
 
 export interface LevelData {
 	map: WorldMap;
@@ -9,6 +9,7 @@ export interface LevelData {
 	player: Player;
 	config: EngineConfig;
 	textureImages: TextureImageMap;
+	customTextureNames: CustomTextureNames;
 }
 
 const LEVEL_PATH = resolve('data/level.json');
@@ -23,7 +24,8 @@ function getDefaults(): LevelData {
 			plane: { x: 0, y: 0.66 }
 		},
 		config: { ...DEFAULT_CONFIG },
-		textureImages: { ...DEFAULT_TEXTURE_IMAGES }
+		textureImages: { ...DEFAULT_TEXTURE_IMAGES },
+		customTextureNames: {}
 	};
 }
 
@@ -37,7 +39,8 @@ export function loadLevel(): LevelData {
 			sprites: data.sprites ?? defaults.sprites,
 			player: data.player ?? defaults.player,
 			config: data.config ?? defaults.config,
-			textureImages: { ...DEFAULT_TEXTURE_IMAGES, ...data.textureImages }
+			textureImages: { ...DEFAULT_TEXTURE_IMAGES, ...data.textureImages },
+			customTextureNames: data.customTextureNames ?? {}
 		};
 	} catch {
 		return getDefaults();
