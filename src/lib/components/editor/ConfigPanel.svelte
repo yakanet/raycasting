@@ -40,6 +40,14 @@
 		<input type="color" bind:value={config.ceilingColor} />
 		<span class="color-val">{config.ceilingColor}</span>
 	</label>
+	<label>
+		Floor Texture Slot
+		<input type="number" step="1" min="0" bind:value={config.floorTexture} />
+	</label>
+	<label>
+		Ceiling Texture Slot
+		<input type="number" step="1" min="0" bind:value={config.ceilingTexture} />
+	</label>
 </div>
 
 <style>

@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { TextureDef } from '$lib/engine';
 	import { saveLevel, uploadTexture as uploadTextureRemote } from '../level.remote';
 
 	const { data } = $props();
+	const initial = untrack(() => structuredClone(data));
 
-	let textures: TextureDef[] = $state(structuredClone(data.textures));
+	let textures: TextureDef[] = $state(structuredClone(initial.textures));
 	let uploading = $state<number | null>(null);
 	let saving = $state(false);
 	let statusMsg = $state('');

@@ -1,4 +1,3 @@
-import { TEX_FLOOR, TEX_CEILING } from './types';
 import type { Player, WorldMap, RayHit, EngineConfig, Sprite } from './types';
 
 /**
@@ -168,8 +167,8 @@ export class Raycaster {
 	 */
 	private renderFloorCeiling(buf: Uint8ClampedArray, player: Player): void {
 		const { screenWidth, screenHeight, textureSize } = this.config;
-		const floorTex = this.textures[TEX_FLOOR];
-		const ceilTex = this.textures[TEX_CEILING];
+		const floorTex = this.textures[this.config.floorTexture];
+		const ceilTex = this.textures[this.config.ceilingTexture];
 
 		if (!floorTex || !ceilTex) return;
 

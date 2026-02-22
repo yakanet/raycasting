@@ -11,12 +11,11 @@ const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_MODULE_ID;
 const ATLAS_SERVE_PATH = '/@texture-atlas.png';
 
 const TEXTURE_SIZE = 64;
-const DEFAULT_SLOT_COUNT = 11;
 
 function detectSlotCount(texturesDir: string): number {
-	if (!existsSync(texturesDir)) return DEFAULT_SLOT_COUNT;
+	if (!existsSync(texturesDir)) return 0;
 	const files = readdirSync(texturesDir);
-	let maxSlot = DEFAULT_SLOT_COUNT - 1; // at least 0..10
+	let maxSlot = -1;
 	for (const f of files) {
 		const match = f.match(/^tex_(\d+)\./);
 		if (match) {

@@ -47,6 +47,20 @@
 			Collectible
 		</label>
 		<label>
+			Entity type
+			<select
+				value={sprite.entityType ?? ''}
+				onchange={(e) => {
+					const val = e.currentTarget.value;
+					sprite.entityType = val === '' ? undefined : val as 'coin' | 'bomb';
+				}}
+			>
+				<option value="">None</option>
+				<option value="coin">Coin</option>
+				<option value="bomb">Bomb</option>
+			</select>
+		</label>
+		<label>
 			Radius <input type="number" step="0.05" min="0" bind:value={sprite.radius} />
 		</label>
 		<label>

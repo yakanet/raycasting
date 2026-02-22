@@ -17,7 +17,8 @@ const SpriteSchema = v.object({
 	solid: v.boolean(),
 	radius: v.number(),
 	scale: v.optional(v.number(), 1),
-	collectible: v.optional(v.boolean())
+	collectible: v.optional(v.boolean()),
+	entityType: v.optional(v.picklist(['coin', 'bomb']))
 });
 
 const PlayerSchema = v.object({
@@ -33,7 +34,9 @@ const ConfigSchema = v.object({
 	moveSpeed: v.number(),
 	rotSpeed: v.number(),
 	floorColor: v.string(),
-	ceilingColor: v.string()
+	ceilingColor: v.string(),
+	floorTexture: v.number(),
+	ceilingTexture: v.number()
 });
 
 const TextureDefSchema = v.object({

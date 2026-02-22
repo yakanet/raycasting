@@ -1,4 +1,3 @@
-import { TEX_COUNT } from './types';
 import type { TextureDef, AtlasManifest } from './types';
 import atlasManifest from 'virtual:texture-atlas';
 
@@ -26,7 +25,7 @@ export async function loadAtlasTextures(size: number): Promise<Uint8ClampedArray
 	}
 
 	const maxSlot = manifest.entries.reduce((max, e) => Math.max(max, e.slot), 0);
-	const count = Math.max(TEX_COUNT, maxSlot + 1);
+	const count = maxSlot + 1;
 	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);
 	for (let i = 0; i < count; i++) {
@@ -100,7 +99,7 @@ export async function buildTextures(
 	const entries = textureDefs.filter((t) => t.path);
 
 	const maxSlot = entries.reduce((max, t) => Math.max(max, t.id), 0);
-	const count = Math.max(TEX_COUNT, maxSlot + 1);
+	const count = maxSlot + 1;
 	const textures = new Array<Uint8ClampedArray>(count);
 	const purple = generatePurpleTexture(size);
 

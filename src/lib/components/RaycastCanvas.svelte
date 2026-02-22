@@ -4,8 +4,6 @@
 		Raycaster,
 		InputHandler,
 		buildTextures,
-		TEX_COIN,
-		TEX_BOMB,
 		playCoinSound,
 		playBombSound
 	} from '$lib/engine';
@@ -62,10 +60,10 @@
 				}
 
 				input!.update(player, map, sprites, config, (sprite) => {
-					if (sprite.texture === TEX_COIN) {
+					if (sprite.entityType === 'coin') {
 						inventory.coins++;
 						playCoinSound();
-					} else if (sprite.texture === TEX_BOMB) {
+					} else if (sprite.entityType === 'bomb') {
 						inventory.bombs++;
 						playBombSound();
 					}

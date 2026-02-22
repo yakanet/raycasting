@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { Player, Sprite, WorldMap, TextureDef } from '$lib/engine';
 
 	import GridEditor from '$lib/components/editor/GridEditor.svelte';
@@ -7,19 +8,20 @@
 	import { saveLevel } from './level.remote';
 
 	const { data } = $props();
+	const initial = untrack(() => structuredClone(data));
 
-	let map: WorldMap = $state(structuredClone(data.map));
-	let sprites: Sprite[] = $state(structuredClone(data.sprites));
-	let player: Player = $state(structuredClone(data.player));
+	let map: WorldMap = $state(structuredClone(initial.map));
+	let sprites: Sprite[] = $state(structuredClone(initial.sprites));
+	let player: Player = $state(structuredClone(initial.player));
 
-	const textures: TextureDef[] = data.textures;
+	let textures = $derived(data.textures);
 
 	// All textures that have an image, usable for walls and sprites
 	let textureOptions = $derived(
 		textures
-			.filter((t) => t.path)
-			.sort((a, b) => a.id - b.id)
-			.map((t) => ({
+			.filter((t: TextureDef) => t.path)
+			.sort((a: TextureDef, b: TextureDef) => a.id - b.id)
+			.map((t: TextureDef) => ({
 				slot: t.id,
 				tileValue: t.id + 1,
 				label: t.name,
@@ -27,9 +29,10 @@
 			}))
 	);
 
+	const firstTex = initial.textures.find((t: TextureDef) => t.path);
 	let mode: 'wall' | 'erase' | 'sprite' | 'player' = $state('wall');
-	let wallTexture = $state(textureOptions[0]?.tileValue ?? 1);
-	let spriteTexture = $state(textureOptions[0]?.slot ?? 0);
+	let wallTexture = $state(firstTex ? firstTex.id + 1 : 1);
+	let spriteTexture = $state(firstTex?.id ?? 0);
 	let selectedSpriteIndex = $state(-1);
 	let saving = $state(false);
 	let statusMsg = $state('');

@@ -536,7 +536,8 @@
       "solid": false,
       "radius": 0.3,
       "scale": 0.5,
-      "collectible": true
+      "collectible": true,
+      "entityType": "coin"
     },
     {
       "pos": {
@@ -547,7 +548,8 @@
       "solid": false,
       "radius": 0.3,
       "scale": 0.5,
-      "collectible": true
+      "collectible": true,
+      "entityType": "coin"
     },
     {
       "pos": {
@@ -558,7 +560,8 @@
       "solid": false,
       "radius": 0.3,
       "scale": 0.5,
-      "collectible": true
+      "collectible": true,
+      "entityType": "coin"
     },
     {
       "pos": {
@@ -569,7 +572,8 @@
       "solid": false,
       "radius": 0,
       "scale": 0.8,
-      "collectible": true
+      "collectible": true,
+      "entityType": "bomb"
     }
   ],
   "player": {
@@ -593,7 +597,9 @@
     "moveSpeed": 0.05,
     "rotSpeed": 0.03,
     "floorColor": "#555555",
-    "ceilingColor": "#333366"
+    "ceilingColor": "#333366",
+    "floorTexture": 5,
+    "ceilingTexture": 6
   },
   "textures": [
     {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { Player, EngineConfig } from '$lib/engine';
 
 	import PlayerPanel from '$lib/components/editor/PlayerPanel.svelte';
@@ -6,9 +7,10 @@
 	import { saveLevel } from '../level.remote';
 
 	const { data } = $props();
+	const initial = untrack(() => structuredClone(data));
 
-	let player: Player = $state(structuredClone(data.player));
-	let config: EngineConfig = $state(structuredClone(data.config));
+	let player: Player = $state(structuredClone(initial.player));
+	let config: EngineConfig = $state(structuredClone(initial.config));
 
 	let saving = $state(false);
 	let statusMsg = $state('');

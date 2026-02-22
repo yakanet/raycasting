@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { TEX_COIN, TEX_BOMB } from '$lib/engine';
 	import type { WorldMap, Sprite, Player } from '$lib/engine';
 
 	interface Props {
@@ -37,14 +36,12 @@
 		} else if (mode === 'erase') {
 			map.tiles[y][x] = 0;
 		} else if (mode === 'sprite') {
-			const isCollectible = spriteTexture === TEX_COIN || spriteTexture === TEX_BOMB;
 			sprites.push({
 				pos: { x: x + 0.5, y: y + 0.5 },
 				texture: spriteTexture,
-				solid: !isCollectible,
-				radius: isCollectible ? 0 : 0.3,
-				scale: spriteTexture === TEX_COIN ? 0.5 : spriteTexture === TEX_BOMB ? 0.8 : 1,
-				...(isCollectible ? { collectible: true } : {})
+				solid: true,
+				radius: 0.3,
+				scale: 1
 			});
 			onspriteselect(sprites.length - 1);
 		} else if (mode === 'player') {
