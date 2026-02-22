@@ -138,8 +138,9 @@
 	<aside class="sidebar">
 		<h2>Level Editor</h2>
 
-		<div class="level-selector">
-			<label class="toolbar-label">
+		<fieldset class="group">
+			<legend>Level</legend>
+			<label class="field">
 				Level:
 				<select
 					value={data.levelId}
@@ -150,11 +151,11 @@
 					{/each}
 				</select>
 			</label>
-			<label class="toolbar-label">
-				Name: <input type="text" bind:value={levelName} class="level-name-input" />
+			<label class="field">
+				Name: <input type="text" bind:value={levelName} class="text-input" />
 			</label>
 			<div class="map-size">
-				<label class="toolbar-label">
+				<label class="field">
 					Width:
 					<input
 						type="number"
@@ -165,7 +166,7 @@
 						class="size-input"
 					/>
 				</label>
-				<label class="toolbar-label">
+				<label class="field">
 					Height:
 					<input
 						type="number"
@@ -177,47 +178,48 @@
 					/>
 				</label>
 			</div>
-		</div>
+			<div class="level-actions">
+				<input
+					type="text"
+					placeholder="new-level-id"
+					bind:value={newLevelId}
+					class="text-input"
+				/>
+				<button class="btn-small" onclick={handleCreateLevel} disabled={saving || !newLevelId.trim()}>
+					New
+				</button>
+				<button class="btn-small btn-danger" onclick={handleDeleteLevel} disabled={saving || data.levels.length <= 1}>
+					Delete
+				</button>
+			</div>
+		</fieldset>
 
-		<div class="level-actions">
-			<input
-				type="text"
-				placeholder="new-level-id"
-				bind:value={newLevelId}
-				class="new-level-input"
-			/>
-			<button class="btn-small" onclick={handleCreateLevel} disabled={saving || !newLevelId.trim()}>
-				New
-			</button>
-			<button class="btn-small btn-danger" onclick={handleDeleteLevel} disabled={saving || data.levels.length <= 1}>
-				Delete
-			</button>
-		</div>
+		<fieldset class="group">
+			<legend>Tools</legend>
+			<div class="toolbar">
+				<button class:active={mode === 'wall'} onclick={() => (mode = 'wall')}>Wall</button>
+				<button class:active={mode === 'erase'} onclick={() => (mode = 'erase')}>Erase</button>
+				<button class:active={mode === 'sprite'} onclick={() => (mode = 'sprite')}>Sprite</button>
+				<button class:active={mode === 'player'} onclick={() => (mode = 'player')}>Player</button>
+			</div>
 
-		<div class="toolbar">
-			<span class="toolbar-label">Mode:</span>
-			<button class:active={mode === 'wall'} onclick={() => (mode = 'wall')}>Wall</button>
-			<button class:active={mode === 'erase'} onclick={() => (mode = 'erase')}>Erase</button>
-			<button class:active={mode === 'sprite'} onclick={() => (mode = 'sprite')}>Sprite</button>
-			<button class:active={mode === 'player'} onclick={() => (mode = 'player')}>Player</button>
-		</div>
+			{#if mode === 'wall'}
+				<TextureSelect
+					{textures}
+					bind:value={wallTexture}
+					label="Wall texture:"
+				/>
+			{/if}
 
-		{#if mode === 'wall'}
-			<TextureSelect
-				{textures}
-				bind:value={wallTexture}
-				label="Wall texture:"
-			/>
-		{/if}
-
-		{#if mode === 'sprite'}
-			<TextureSelect
-				{textures}
-				bind:value={spriteTexture}
-				offset={0}
-				label="Sprite texture:"
-			/>
-		{/if}
+			{#if mode === 'sprite'}
+				<TextureSelect
+					{textures}
+					bind:value={spriteTexture}
+					offset={0}
+					label="Sprite texture:"
+				/>
+			{/if}
+		</fieldset>
 
 		<SpriteList
 			{sprites}
@@ -226,7 +228,6 @@
 			onselect={selectSprite}
 			onremove={removeSprite}
 		/>
-
 		<SpritePanel sprite={selectedSprite} {textures} levels={data.levels} />
 
 		<EnvironmentPanel {environment} {textures} />
@@ -235,11 +236,10 @@
 			<button class="btn-save" onclick={save} disabled={saving}>
 				{saving ? 'Saving...' : 'Save'}
 			</button>
+			{#if statusMsg}
+				<span class="status" class:error={statusMsg.startsWith('Error')}>{statusMsg}</span>
+			{/if}
 		</div>
-
-		{#if statusMsg}
-			<div class="status" class:error={statusMsg.startsWith('Error')}>{statusMsg}</div>
-		{/if}
 	</aside>
 
 	<main class="editor-main">
@@ -280,23 +280,33 @@
 		color: #fff;
 	}
 
-	.level-selector {
+	.group {
+		border: 1px solid #444;
+		border-radius: 4px;
+		padding: 8px;
+		background: #1a1a1a;
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+		margin: 0;
 	}
 
-	.level-selector select {
-		background: #222;
-		border: 1px solid #555;
-		color: #fff;
-		padding: 4px 6px;
+	.group legend {
+		font-size: 13px;
+		color: #ccc;
+		padding: 0 4px;
+	}
+
+	.field {
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		font-size: 12px;
-		border-radius: 3px;
-		flex: 1;
+		color: #aaa;
 	}
 
-	.level-name-input {
+	.field select,
+	.text-input {
 		background: #222;
 		border: 1px solid #555;
 		color: #fff;
@@ -334,16 +344,6 @@
 		align-items: center;
 	}
 
-	.new-level-input {
-		background: #222;
-		border: 1px solid #555;
-		color: #fff;
-		padding: 3px 6px;
-		font-size: 12px;
-		border-radius: 3px;
-		flex: 1;
-	}
-
 	.btn-small {
 		background: #333;
 		border: 1px solid #555;
@@ -377,12 +377,6 @@
 		gap: 4px;
 		align-items: center;
 		flex-wrap: wrap;
-	}
-
-	.toolbar-label {
-		font-size: 12px;
-		color: #888;
-		margin-right: 4px;
 	}
 
 	.toolbar button {
