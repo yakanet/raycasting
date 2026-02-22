@@ -9,7 +9,7 @@ export interface Player {
 	plane: Vector2;
 }
 
-export type EntityType = 'coin' | 'bomb';
+export type EntityType = string;
 
 export interface Sprite {
 	pos: Vector2;
@@ -21,10 +21,7 @@ export interface Sprite {
 	entityType?: EntityType;
 }
 
-export interface Inventory {
-	coins: number;
-	bombs: number;
-}
+export type Inventory = Record<string, number>;
 
 export interface RayHit {
 	wallDist: number;

@@ -18,7 +18,7 @@ const SpriteSchema = v.object({
 	radius: v.number(),
 	scale: v.optional(v.number(), 1),
 	collectible: v.optional(v.boolean()),
-	entityType: v.optional(v.picklist(['coin', 'bomb']))
+	entityType: v.optional(v.string())
 });
 
 const PlayerSchema = v.object({

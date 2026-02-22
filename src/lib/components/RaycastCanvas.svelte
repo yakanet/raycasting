@@ -4,8 +4,7 @@
 		Raycaster,
 		InputHandler,
 		buildTextures,
-		playCoinSound,
-		playBombSound
+		getEntityBehavior
 	} from '$lib/engine';
 	import type { Player, Sprite, WorldMap, EngineConfig, Inventory, TextureDef } from '$lib/engine';
 	import Minimap from './Minimap.svelte';
@@ -23,7 +22,7 @@
 	let canvas: HTMLCanvasElement;
 	let fps = $state(0);
 	let showMinimap = $state(true);
-	let inventory: Inventory = $state({ coins: 0, bombs: 0 });
+	let inventory: Inventory = $state({});
 	let loading = $state(true);
 
 	onMount(() => {
@@ -60,12 +59,12 @@
 				}
 
 				input!.update(player, map, sprites, config, (sprite) => {
-					if (sprite.entityType === 'coin') {
-						inventory.coins++;
-						playCoinSound();
-					} else if (sprite.entityType === 'bomb') {
-						inventory.bombs++;
-						playBombSound();
+					if (sprite.entityType) {
+						const behavior = getEntityBehavior(sprite.entityType);
+						if (behavior) {
+							inventory[behavior.inventoryKey] = (inventory[behavior.inventoryKey] ?? 0) + 1;
+							behavior.playSound();
+						}
 					}
 				});
 				raycaster.render(ctx, player, map, sprites);
@@ -100,8 +99,9 @@
 			{showMinimap ? 'Hide' : 'Show'} Map
 		</button>
 		<div class="inventory">
-			<span>Coins: {inventory.coins}</span>
-			<span>Bombs: {inventory.bombs}</span>
+			{#each Object.entries(inventory) as [key, count]}
+				<span>{key}: {count}</span>
+			{/each}
 		</div>
 	</div>
 

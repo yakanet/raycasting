@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getEntityTypes } from '$lib/engine';
 	import type { Sprite, TextureDef } from '$lib/engine';
 
 	interface Props {
@@ -52,12 +53,13 @@
 				value={sprite.entityType ?? ''}
 				onchange={(e) => {
 					const val = e.currentTarget.value;
-					sprite.entityType = val === '' ? undefined : val as 'coin' | 'bomb';
+					sprite.entityType = val === '' ? undefined : val;
 				}}
 			>
 				<option value="">None</option>
-				<option value="coin">Coin</option>
-				<option value="bomb">Bomb</option>
+				{#each getEntityTypes() as type}
+					<option value={type}>{type}</option>
+				{/each}
 			</select>
 		</label>
 		<label>
